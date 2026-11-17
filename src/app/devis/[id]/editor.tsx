@@ -355,6 +355,21 @@ export function Editor({
           </span>
         </div>
         <p className="text-sm text-stone-600">Créé le {quote.createdAtLabel}</p>
+        <div className="flex flex-col gap-1">
+          <a
+            href={`/devis/${quote.id}/pdf`}
+            target="_blank"
+            rel="noopener"
+            className={`${secondaryButtonClass} self-start`}
+          >
+            Voir le PDF
+          </a>
+          {dirty && !readOnly && (
+            <p className="text-sm text-amber-800" data-testid="pdf-avertissement">
+              Le PDF reflète la dernière version enregistrée, sans vos modifications en cours.
+            </p>
+          )}
+        </div>
       </header>
 
       {media}
