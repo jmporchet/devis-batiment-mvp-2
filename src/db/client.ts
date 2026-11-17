@@ -1,5 +1,6 @@
 import "server-only";
 import { createDb, type Db } from "./create-db";
+import { seedPriceGridIfEmpty } from "./price-items";
 
 /**
  * Connexion SQLite partagée par le serveur local.
@@ -15,9 +16,10 @@ const globalForDb = globalThis as unknown as { __devisDb?: Db };
 
 export function getDb(): Db {
   if (!globalForDb.__devisDb) {
-    globalForDb.__devisDb = createDb(
-      process.env.DATABASE_PATH ?? "data/devis.sqlite",
-    );
+    const db = createDb(process.env.DATABASE_PATH ?? "data/devis.sqlite");
+    // Premier lancement local : grille de départ, sans étape manuelle.
+    seedPriceGridIfEmpty(db);
+    globalForDb.__devisDb = db;
   }
   return globalForDb.__devisDb;
 }
