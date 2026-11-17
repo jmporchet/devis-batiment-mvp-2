@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/db/client";
 import { QuoteError, replaceQuoteLines, setQuoteStatus, updateQuoteInfo } from "@/db/quotes";
+import { AiError } from "@/server/ai/openrouter";
+import { generateQuoteDraft } from "@/server/ai/generate-draft";
 import type { Quote, QuoteInfo, QuoteLine, QuoteStatus } from "@/domain/types";
 import type { ActionResult } from "./action-result";
 
@@ -21,6 +23,10 @@ function success(quote: Quote): ActionResult {
 function failure(error: unknown): ActionResult {
   if (error instanceof QuoteError) {
     return { ok: false, message: error.message, fieldErrors: error.fieldErrors };
+  }
+  if (error instanceof AiError) {
+    console.error("IA :", error.message, error.detail ?? "");
+    return { ok: false, message: error.message, fieldErrors: {} };
   }
   console.error(error);
   return {
@@ -70,6 +76,23 @@ export async function setStatusAction(id: number, status: QuoteStatus): Promise<
   }
   try {
     return success(setQuoteStatus(getDb(), id, status));
+  } catch (error) {
+    return failure(error);
+  }
+}
+
+/**
+ * Demande à l'IA un brouillon de lignes à partir des photos et de la note
+ * vocale. Remplace les lignes existantes (l'écran demande confirmation).
+ */
+export async function generateDraftAction(id: number): Promise<ActionResult> {
+  if (!isId(id)) return failure(new QuoteError("Devis introuvable."));
+  try {
+    const outcome = await generateQuoteDraft(getDb(), id);
+    console.info(
+      `IA devis ${id} : ${outcome.lineCount} lignes, modèle ${outcome.model}, coût ${outcome.costUsd ?? "?"} $`,
+    );
+    return success(outcome.quote);
   } catch (error) {
     return failure(error);
   }

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { QuoteError } from "@/db/quotes";
+import { isAiConfigured } from "@/server/ai/openrouter";
 import { createQuoteFromCapture } from "@/server/create-quote";
 
 export interface CaptureState {
@@ -44,5 +45,6 @@ export async function createQuoteAction(
     };
   }
   // redirect() lève une exception de contrôle : hors du try/catch.
-  redirect(`/devis/${id}`);
+  // Avec l'IA configurée, la relecture lance le brouillon automatiquement.
+  redirect(isAiConfigured() ? `/devis/${id}?ia=1` : `/devis/${id}`);
 }

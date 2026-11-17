@@ -42,3 +42,4 @@ next-env.d.ts
 
 # données locales (SQLite, photos)
 /data/
+!.env.example

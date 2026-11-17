@@ -5,24 +5,29 @@ import { Suspense } from "react";
 import { getDb } from "@/db/client";
 import { listPriceItems } from "@/db/price-items";
 import { getQuote } from "@/db/quotes";
+import { isAiConfigured } from "@/server/ai/openrouter";
 import { Editor } from "./editor";
 import { formatDateCh } from "@/lib/format-date";
 import { MediaSection } from "./media-section";
 
 export const metadata: Metadata = { title: "Relecture du devis · Devis chantier" };
 
-export default function QuotePage({ params }: PageProps<"/devis/[id]">) {
+export default function QuotePage({ params, searchParams }: PageProps<"/devis/[id]">) {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 pt-6">
       <Suspense fallback={<p className="pb-8 text-stone-500">Chargement du devis…</p>}>
-        <QuoteScreen params={params} />
+        <QuoteScreen params={params} searchParams={searchParams} />
       </Suspense>
     </main>
   );
 }
 
-async function QuoteScreen({ params }: Pick<PageProps<"/devis/[id]">, "params">) {
+async function QuoteScreen({
+  params,
+  searchParams,
+}: Pick<PageProps<"/devis/[id]">, "params" | "searchParams">) {
   const { id: rawId } = await params;
+  const { ia } = await searchParams;
   if (!/^\d+$/.test(rawId)) notFound();
   const id = Number(rawId);
   await connection();
@@ -47,6 +52,12 @@ async function QuoteScreen({ params }: Pick<PageProps<"/devis/[id]">, "params">)
         lines: quote.lines,
       }}
       priceItems={priceItems}
+      ai={{
+        enabled: isAiConfigured(),
+        hasMedia: quote.media.length > 0,
+        // Arrivée depuis la capture (?ia=1) : lancer l'analyse tout de suite.
+        autoStart: ia === "1" && quote.lines.length === 0 && quote.status === "brouillon",
+      }}
       media={<MediaSection quoteId={quote.id} media={quote.media} />}
     />
   );

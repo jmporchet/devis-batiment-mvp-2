@@ -13,6 +13,29 @@ npm run dev        # développement, http://localhost:3000
 npm run build && npm start   # serveur local de production
 ```
 
+## Brouillon IA
+
+Après la capture, l'application envoie la note vocale et les photos à un modèle multimodal via [OpenRouter](https://openrouter.ai). Le modèle transcrit la note et propose des lignes choisies dans la grille, avec des quantités. **Il ne fixe jamais les prix** : ils sont relus dans la grille à partir du code du poste. Un travail absent de la grille arrive « à chiffrer ». La transcription et les points à vérifier vont dans les notes du devis. Tout passe ensuite par la relecture.
+
+Pour l'activer :
+
+```bash
+cp .env.example .env.local
+# puis renseigner OPENROUTER_API_KEY dans .env.local et redémarrer le serveur
+```
+
+Sans clé, l'application fonctionne normalement, sans brouillon IA.
+
+Confidentialité : les demandes sont routées uniquement vers des fournisseurs sans conservation des données (`data_collection: "deny"`, `zdr: true`). Les données quittent tout de même la machine : informez-en les clients.
+
+Coût mesuré : environ 1 à 2 centimes de dollar par devis (note de 25 s), pour une quinzaine de secondes d'attente.
+
+Essai hors application avec vos propres fichiers :
+
+```bash
+OPENROUTER_API_KEY=… npm run ai:smoke -- note.webm photo1.jpg
+```
+
 ## Tester sur téléphone
 
 Le téléphone et l'ordinateur doivent être sur le même réseau Wi-Fi. Les photos et la galerie fonctionnent en HTTP, mais le navigateur ne donne accès au micro (enregistrement de la note vocale) qu'en HTTPS ou sur localhost. Sur `http://192.168.x.x`, l'application affiche un message et propose de joindre un fichier audio à la place.

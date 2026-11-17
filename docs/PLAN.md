@@ -25,4 +25,4 @@ Tous les montants sont des entiers en centimes. Les taux sont en points de base 
 | 7 | PDF | En-tête entreprise, n° IDE/TVA, validité, conditions |
 | 8 | Finitions | Accès protégé, jeu de 10 dictées test |
 
-L'étape 5 (brouillon IA) vient après la capture et la relecture : en attendant, la capture crée un brouillon vide que l'on remplit à la main dans la relecture. L'IA pré-remplira ensuite les lignes, qui passeront par la même relecture.
+L'étape 5 (brouillon IA) a été faite après la capture et la relecture. Un seul appel multimodal (note vocale + photos + grille sans prix) via OpenRouter, modèle `google/gemini-3.8-flash` par défaut, sortie JSON imposée. Les lignes arrivent marquées « IA » dans la relecture.

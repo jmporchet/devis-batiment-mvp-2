@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
 import { formatChf } from "@/domain/money";
 import { computeTotals } from "@/domain/pricing";
 import {
@@ -15,7 +15,7 @@ import {
   type Unit,
 } from "@/domain/types";
 import type { ActionResult } from "./action-result";
-import { saveInfoAction, saveLinesAction, setStatusAction } from "./actions";
+import { generateDraftAction, saveInfoAction, saveLinesAction, setStatusAction } from "./actions";
 import { GridPicker } from "./grid-picker";
 import { LineRow, lineFieldId } from "./line-row";
 import {
@@ -28,6 +28,15 @@ import {
   type LineDraft,
 } from "./line-drafts";
 import { buttonClass, inputClass, primaryButtonClass, secondaryButtonClass } from "./ui";
+
+export interface EditorAi {
+  /** OPENROUTER_API_KEY présente côté serveur. */
+  enabled: boolean;
+  /** Le devis a des photos ou une note vocale à analyser. */
+  hasMedia: boolean;
+  /** Lancer l'analyse dès l'ouverture (arrivée depuis la capture). */
+  autoStart: boolean;
+}
 
 export interface EditorQuote {
   id: number;
@@ -64,9 +73,11 @@ export function Editor({
   quote,
   priceItems,
   media,
+  ai,
 }: {
   quote: EditorQuote;
   priceItems: PriceItem[];
+  ai: EditorAi;
   /** Photos et note vocale, rendues côté serveur. */
   media: ReactNode;
 }) {
@@ -83,7 +94,15 @@ export function Editor({
   const [panel, setPanel] = useState<"grid" | "free" | null>(null);
   const [freeLabel, setFreeLabel] = useState("");
   const [freeUnit, setFreeUnit] = useState<Unit>("forfait");
-  const [busy, setBusy] = useState(false);
+  const [saving, setBusy] = useState(false);
+  /**
+   * Analyse IA dans une transition : `isPending` s'affiche tout de suite, même
+   * quand l'analyse est lancée depuis un effet (arrivée depuis la capture).
+   */
+  const [aiRunning, startAi] = useTransition();
+  const busy = saving || aiRunning;
+  const autoStarted = useRef(false);
+  const scrollToLines = useRef(false);
   const [message, setMessage] = useState<Message | null>(null);
   const [removed, setRemoved] = useState<{ draft: LineDraft; index: number } | null>(null);
   const focusRequest = useRef<Focus | null>(null);
@@ -113,6 +132,13 @@ export function Editor({
     if (!request) return;
     focusRequest.current = null;
     document.getElementById(lineFieldId(request.key, request.field))?.focus();
+  }, [drafts]);
+
+  // Après un brouillon IA, amène le chef de chantier sur les lignes proposées.
+  useEffect(() => {
+    if (!scrollToLines.current) return;
+    scrollToLines.current = false;
+    document.getElementById("lignes-titre")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [drafts]);
 
   // Avertit avant de quitter la page tant que des modifications ne sont pas enregistrées.
@@ -236,6 +262,65 @@ export function Editor({
     }
   }
 
+  /** Brouillon IA : remplace les lignes par la proposition du modèle. */
+  function runAi(options: { confirm: boolean } = { confirm: true }) {
+    if (busy || readOnly) return;
+    if (options.confirm) {
+      if (dirty && !window.confirm("Les modifications non enregistrées seront perdues. Continuer ?")) return;
+      if (
+        drafts.length > 0 &&
+        !window.confirm(`Remplacer les ${drafts.length} lignes actuelles par la proposition de l'IA ?`)
+      ) {
+        return;
+      }
+    }
+    setMessage(null);
+    setRemoved(null);
+    startAi(async () => {
+      let result: ActionResult;
+      try {
+        result = await generateDraftAction(quote.id);
+      } catch (error) {
+        console.error(error);
+        startAi(() =>
+          setMessage({ kind: "error", text: "L'analyse a échoué. Vérifiez la connexion et réessayez.", at: contentId }),
+        );
+        return;
+      }
+      startAi(() => {
+        if (!result.ok) {
+          fail(result);
+          return;
+        }
+        const next = result.lines.map((line) => draftFromLine(line, makeKey()));
+        setDrafts(next);
+        setSavedSignature(draftsSignature(next));
+        setInfo(result.info);
+        setSavedInfo(result.info);
+        const unpriced = result.lines.filter((l) => l.unitPriceCents === null).length;
+        setMessage({
+          kind: "ok",
+          text:
+            `L'IA propose ${result.lines.length} ligne${result.lines.length > 1 ? "s" : ""}` +
+            (unpriced > 0 ? `, dont ${unpriced} à chiffrer` : "") +
+            ". Vérifiez les quantités et les points « À vérifier » dans les notes.",
+          at: `${draftsSignature(next)}|${JSON.stringify(result.info)}`,
+        });
+        scrollToLines.current = true;
+      });
+    });
+  }
+
+  // Arrivée depuis la capture : analyse automatique, une seule fois.
+  useEffect(() => {
+    if (!ai.autoStart || !ai.enabled || autoStarted.current) return;
+    autoStarted.current = true;
+    // Retire ?ia=1 sans navigation (une navigation concurrente masquerait l'analyse).
+    window.history.replaceState(null, "", `/devis/${quote.id}`);
+    runAi({ confirm: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- lancement unique au montage
+  }, []);
+
   function addFreeLine() {
     if (freeLabel.trim() === "") return;
     addDraft(draftOffGrid(freeLabel, freeUnit, makeKey()));
@@ -344,6 +429,15 @@ export function Editor({
         <h2 id="lignes-titre" className="text-lg font-semibold">
           Lignes du devis
         </h2>
+        {!readOnly && ai.hasMedia && (
+          <AiPanel
+            enabled={ai.enabled}
+            running={aiRunning}
+            hasLines={drafts.length > 0}
+            disabled={busy}
+            onRun={() => runAi()}
+          />
+        )}
         {drafts.length === 0 ? (
           <p className="rounded-lg border border-dashed border-stone-300 p-4 text-sm text-stone-600">
             Aucune ligne pour l&apos;instant.
@@ -522,6 +616,12 @@ export function Editor({
         data-testid="barre"
         className="sticky bottom-0 z-10 -mx-4 mt-2 flex flex-col gap-2 border-t border-stone-300 bg-white/95 px-4 py-3 backdrop-blur"
       >
+        {aiRunning && (
+          <p role="status" className="flex items-center gap-2 text-sm text-amber-950">
+            <span aria-hidden="true" className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-amber-700 border-t-transparent" />
+            Analyse IA en cours (photos et note vocale)…
+          </p>
+        )}
         {visibleMessage && (
           <p
             role={visibleMessage.kind === "error" ? "alert" : "status"}
@@ -560,11 +660,57 @@ export function Editor({
               disabled={busy || !dirty}
               className={`${primaryButtonClass} min-w-32`}
             >
-              {busy ? "Enregistrement…" : "Enregistrer"}
+              {saving ? "Enregistrement…" : "Enregistrer"}
             </button>
           )}
         </div>
       </div>
     </>
+  );
+}
+
+function AiPanel({
+  enabled,
+  running,
+  hasLines,
+  disabled,
+  onRun,
+}: {
+  enabled: boolean;
+  running: boolean;
+  hasLines: boolean;
+  disabled: boolean;
+  onRun: () => void;
+}) {
+  if (!enabled) {
+    return (
+      <p className="rounded-lg bg-stone-100 p-3 text-sm text-stone-700">
+        Brouillon IA indisponible : ajoutez <code>OPENROUTER_API_KEY</code> dans <code>.env.local</code> puis
+        redémarrez le serveur.
+      </p>
+    );
+  }
+  if (running) {
+    return (
+      <p className="flex items-center gap-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-950">
+        <span aria-hidden="true" className="size-4 shrink-0 animate-spin rounded-full border-2 border-amber-700 border-t-transparent" />
+        Analyse de la note vocale et des photos… environ 15 secondes.
+      </p>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-1">
+      <button
+        type="button"
+        onClick={onRun}
+        disabled={disabled}
+        className={hasLines ? secondaryButtonClass : primaryButtonClass}
+      >
+        {hasLines ? "Relancer l'IA" : "Proposer les lignes avec l'IA"}
+      </button>
+      <p className="text-xs text-stone-600">
+        L&apos;IA choisit les postes et les quantités ; les prix viennent toujours de la grille.
+      </p>
+    </div>
   );
 }
