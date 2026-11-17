@@ -7,3 +7,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Conventions du projet
+
+- Lire `docs/PLAN.md` avant toute tâche.
+- Montants : entiers en centimes (`Centimes`). Taux en points de base (TVA 8,1 % = `VAT_RATE_BP` = 810). Jamais de float pour l'argent.
+- Types partagés : `src/domain/types.ts`. Ne pas les dupliquer.
+- Base : `getDb()` depuis `src/db/client.ts` (serveur uniquement). Dans un Server Component, appeler `await connection()` de `next/server` avant une lecture SQLite (driver synchrone, sinon exécuté au prérendu).
+- Schéma : `src/db/schema.ts`, puis `npm run db:generate` pour créer la migration dans `drizzle/` (à committer).
+- Tests : `*.test.ts` à côté du code, `createDb(":memory:")` pour une base de test.
+- Interface en français (fr-CH), mobile-first.
+- Avant de pousser : `npm run check` et `npm run build`.

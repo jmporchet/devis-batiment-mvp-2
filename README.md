@@ -1,36 +1,28 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Devis chantier
 
-## Getting Started
+MVP d'un générateur de devis pour une PME suisse du bâtiment. Le chef de chantier prend jusqu'à 3 photos et dicte environ 30 secondes de notes. L'application propose un devis structuré à partir de la grille de prix de l'entreprise, en CHF avec TVA à 8,1 %, puis produit un PDF à l'en-tête de l'entreprise.
 
-First, run the development server:
+## Lancer en local
+
+Prérequis : Node 22 ou plus récent.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # développement, http://localhost:3000
+# ou
+npm run build && npm start   # serveur local de production
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Pour tester sur un téléphone du même réseau Wi-Fi : `npm run dev -- -H 0.0.0.0`, puis ouvrir `http://<ip-de-la-machine>:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+La base SQLite est créée automatiquement dans `data/devis.sqlite` au premier accès (chemin modifiable via `DATABASE_PATH`). Les migrations s'appliquent au démarrage.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Vérifications
 
-## Learn More
+```bash
+npm run check      # lint + types + tests
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Documentation
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Le plan du MVP et les choix techniques sont dans [docs/PLAN.md](docs/PLAN.md).
