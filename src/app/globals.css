@@ -5,6 +5,78 @@
     "Helvetica Neue", Arial, sans-serif;
 }
 
-body {
-  font-family: var(--font-sans);
+/*
+ * Base mobile-first. Ne jamais fixer la taille de police de :root/html :
+ * la page accepte la mise à l'échelle du texte du système (meta text-scale).
+ */
+@layer base {
+  :root {
+    --target-size: 24px;
+  }
+  @media (pointer: coarse) {
+    :root {
+      --target-size: 44px;
+    }
+  }
+
+  body {
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    overflow-wrap: break-word;
+  }
+
+  :where(h1, h2, h3) {
+    text-wrap: balance;
+  }
+  :where(p, li) {
+    text-wrap: pretty;
+  }
+
+  /* Cibles tactiles : 24 px minimum, 44 px sur écran tactile. */
+  :where(button, select, textarea, summary, nav a, input:not([type="checkbox"], [type="radio"])) {
+    min-block-size: var(--target-size);
+    min-inline-size: var(--target-size);
+  }
+
+  /* Au moins 16 px dans les champs : évite le zoom automatique d'iOS. */
+  :where(input, select, textarea, button) {
+    font: inherit;
+  }
+  :where(input, select, textarea) {
+    font-size: max(1rem, 1em);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-stone-900);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Erreurs : affichées seulement après interaction (:user-invalid) ou
+     renvoyées par le serveur (aria-invalid posé au rendu). */
+  :where(input, select, textarea):is(:user-invalid, [aria-invalid="true"]) {
+    border-color: var(--color-red-700);
+    background-color: var(--color-red-50);
+  }
+
+  .field-error {
+    display: none;
+  }
+  .field:has(:user-invalid) .field-error[data-client],
+  .field-error[data-server] {
+    display: flex;
+  }
+
+  .visually-hidden:where(:not(:focus-within, :active)) {
+    position: absolute !important;
+    clip-path: inset(50%) !important;
+    overflow: hidden !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    white-space: nowrap !important;
+  }
 }
