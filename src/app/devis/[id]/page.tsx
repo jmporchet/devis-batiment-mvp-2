@@ -1,64 +1,53 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
 import { connection } from "next/server";
+import { Suspense } from "react";
 import { getDb } from "@/db/client";
+import { listPriceItems } from "@/db/price-items";
 import { getQuote } from "@/db/quotes";
+import { Editor } from "./editor";
+import { formatDateCh } from "@/lib/format-date";
+import { MediaSection } from "./media-section";
 
-export const metadata: Metadata = { title: "Devis · Devis chantier" };
+export const metadata: Metadata = { title: "Relecture du devis · Devis chantier" };
 
-/** Page provisoire : remplacée par l'écran de relecture. */
 export default function QuotePage({ params }: PageProps<"/devis/[id]">) {
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-4 py-6">
-      <Link href="/devis" className="inline-flex min-h-11 items-center text-sm text-stone-600 underline">
-        Retour aux devis
-      </Link>
-      <Suspense fallback={<p className="text-stone-500">Chargement du devis…</p>}>
-        <QuoteContent params={params} />
+    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 pt-6">
+      <Suspense fallback={<p className="pb-8 text-stone-500">Chargement du devis…</p>}>
+        <QuoteScreen params={params} />
       </Suspense>
     </main>
   );
 }
 
-async function QuoteContent({ params }: { params: PageProps<"/devis/[id]">["params"] }) {
+async function QuoteScreen({ params }: Pick<PageProps<"/devis/[id]">, "params">) {
+  const { id: rawId } = await params;
+  if (!/^\d+$/.test(rawId)) notFound();
+  const id = Number(rawId);
   await connection();
-  const { id } = await params;
-  const quoteId = Number(id);
-  const quote = Number.isInteger(quoteId) ? getQuote(getDb(), quoteId) : undefined;
+  const db = getDb();
+  const quote = getQuote(db, id);
   if (!quote) notFound();
-
-  const photos = quote.media.filter((m) => m.kind === "photo");
-  const audio = quote.media.find((m) => m.kind === "audio");
+  const priceItems = listPriceItems(db);
 
   return (
-    <>
-      <header>
-        <p className="text-sm text-stone-500">Devis N° {quote.number}</p>
-        <h1 className={`break-words text-2xl font-semibold ${quote.title ? "" : "text-stone-500"}`}>
-          {quote.title || "Sans objet"}
-        </h1>
-      </header>
-      {photos.length > 0 ? (
-        <section aria-label="Photos" className="flex flex-col gap-3">
-          {photos.map((photo, index) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={photo.id}
-              src={`/devis/${quote.id}/media/${photo.id}`}
-              alt={`Photo ${index + 1} du chantier`}
-              className="w-full rounded-xl bg-stone-200"
-            />
-          ))}
-        </section>
-      ) : null}
-      {audio ? (
-        <section aria-label="Note vocale" className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold">Note vocale</h2>
-          <audio controls preload="metadata" src={`/devis/${quote.id}/media/${audio.id}`} className="w-full" />
-        </section>
-      ) : null}
-    </>
+    <Editor
+      quote={{
+        id: quote.id,
+        number: quote.number,
+        createdAtLabel: formatDateCh(quote.createdAt),
+        status: quote.status,
+        info: {
+          title: quote.title,
+          clientName: quote.clientName,
+          clientAddress: quote.clientAddress,
+          notes: quote.notes,
+        },
+        lines: quote.lines,
+      }}
+      priceItems={priceItems}
+      media={<MediaSection quoteId={quote.id} media={quote.media} />}
+    />
   );
 }
