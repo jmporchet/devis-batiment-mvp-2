@@ -83,3 +83,67 @@ export interface QuoteTotals {
   /** Vrai si au moins une ligne est « à chiffrer » : le total est incomplet. */
   hasUnpricedLines: boolean;
 }
+
+/* ---------- Devis ---------- */
+
+export const QUOTE_STATUSES = ["brouillon", "valide"] as const;
+export type QuoteStatus = (typeof QUOTE_STATUSES)[number];
+
+export const QUOTE_STATUS_LABELS: Record<QuoteStatus, string> = {
+  brouillon: "Brouillon",
+  valide: "Validé",
+};
+
+export const MEDIA_KINDS = ["photo", "audio"] as const;
+export type MediaKind = (typeof MEDIA_KINDS)[number];
+
+/** Nombre maximal de photos par devis. */
+export const MAX_PHOTOS = 3;
+/** Durée maximale d'une note vocale, en secondes (cible : environ 30 s). */
+export const MAX_AUDIO_SECONDS = 60;
+
+/** Photo ou note vocale jointe à un devis. */
+export interface QuoteMedia {
+  /** UUID, utilisé dans l'URL /devis/[id]/media/[mediaId]. */
+  id: string;
+  kind: MediaKind;
+  mimeType: string;
+  sizeBytes: number;
+  createdAt: Date;
+}
+
+/** Infos modifiables d'un devis (hors lignes). */
+export interface QuoteInfo {
+  /** Objet du devis, p. ex. « Rénovation salle de bain ». */
+  title: string;
+  clientName: string;
+  clientAddress: string;
+  /** Notes libres ; recevra la transcription de la note vocale (étape IA). */
+  notes: string;
+}
+
+export interface Quote extends QuoteInfo {
+  id: number;
+  /** Numéro lisible, p. ex. « 2026-007 ». */
+  number: string;
+  status: QuoteStatus;
+  createdAt: Date;
+  updatedAt: Date;
+  lines: QuoteLine[];
+  media: QuoteMedia[];
+}
+
+/** Ligne de la liste des devis. */
+export interface QuoteSummary {
+  id: number;
+  number: string;
+  title: string;
+  clientName: string;
+  status: QuoteStatus;
+  createdAt: Date;
+  updatedAt: Date;
+  lineCount: number;
+  photoCount: number;
+  hasAudio: boolean;
+  totals: QuoteTotals;
+}

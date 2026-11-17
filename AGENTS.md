@@ -18,3 +18,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Tests : `*.test.ts` à côté du code, `createDb(":memory:")` pour une base de test.
 - Interface en français (fr-CH), mobile-first.
 - Avant de pousser : `npm run check` et `npm run build`.
+- Devis : accès aux données dans `src/db/quotes.ts` (`createQuote`, `getQuote`, `listQuotes`, `updateQuoteInfo`, `replaceQuoteLines`, `setQuoteStatus`, `deleteQuote`). Erreurs métier : `QuoteError` (message français + `fieldErrors`). Un devis validé n'est plus modifiable.
+- Lignes de devis : libellé, unité et prix sont copiés depuis la grille à l'ajout (la grille peut changer ensuite). `unitPriceCents: null` = « à chiffrer ». Totaux : toujours `computeTotals` de `src/domain/pricing.ts`, côté client comme serveur.
+- Médias : `createQuoteFromCapture` (`src/server/create-quote.ts`) pour créer un devis depuis la capture ; fichiers sur disque dans `MEDIA_DIR` (défaut `data/media`), type vérifié par signature. URL d'un média : `/devis/<id>/media/<mediaId>` (gère Range pour l'audio Safari).
+- Server Actions : limite de corps à 40 Mo (`next.config.ts`) ; réduire les photos côté navigateur avant l'envoi.
