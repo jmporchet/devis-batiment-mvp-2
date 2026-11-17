@@ -147,3 +147,49 @@ export interface QuoteSummary {
   hasAudio: boolean;
   totals: QuoteTotals;
 }
+
+/* ---------- Entreprise (en-tête du PDF) ---------- */
+
+/** Coordonnées de l'entreprise, une seule pour le MVP. */
+export interface Company {
+  /** Raison sociale, p. ex. « Bâti-Démo Sàrl ». */
+  name: string;
+  /** Rue et numéro. */
+  street: string;
+  /** NPA et localité, p. ex. « 1020 Renens VD ». */
+  postalCity: string;
+  phone: string;
+  email: string;
+  website: string;
+  /** Numéro IDE avec mention TVA, p. ex. « CHE-123.456.789 TVA ». Vide si non assujettie. */
+  vatNumber: string;
+  /** IBAN pour le paiement, format libre. */
+  iban: string;
+  /** Validité de l'offre en jours. */
+  validityDays: number;
+  /** Conditions de paiement, p. ex. « 30 jours net ». */
+  paymentTerms: string;
+  /** Texte libre en pied de devis (conditions générales, remarques). */
+  footerNote: string;
+  /** Logo présent (servi par /entreprise/logo). */
+  hasLogo: boolean;
+  updatedAt: Date;
+}
+
+export type CompanyInfo = Omit<Company, "hasLogo" | "updatedAt">;
+
+/** Valeurs de démonstration, clairement fictives. */
+export const DEMO_COMPANY: CompanyInfo = {
+  name: "Bâti-Démo Sàrl",
+  street: "Chemin de l'Exemple 12",
+  postalCity: "1020 Renens VD",
+  phone: "021 555 00 00",
+  email: "devis@bati-demo.example",
+  website: "",
+  vatNumber: "CHE-000.000.000 TVA",
+  iban: "CH00 0000 0000 0000 0000 0",
+  validityDays: 30,
+  paymentTerms: "30 jours net",
+  footerNote:
+    "Offre établie sur la base d'une visite et de photos. Les quantités seront ajustées selon métré final. Travaux non mentionnés exclus.",
+};
