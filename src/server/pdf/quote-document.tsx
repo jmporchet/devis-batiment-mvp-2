@@ -1,4 +1,11 @@
-import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import {
+  Document,
+  Image,
+  Page,
+  StyleSheet,
+  Text,
+  View,
+} from "@react-pdf/renderer";
 import { computeTotals } from "@/domain/pricing";
 import type { Company, Quote } from "@/domain/types";
 import {
@@ -36,10 +43,22 @@ const s = StyleSheet.create({
   },
   header: { height: mm(56), position: "relative" },
   sender: { width: mm(90) },
-  logo: { maxHeight: mm(18), maxWidth: mm(60), objectFit: "contain", objectPosition: "left top", marginBottom: mm(3) },
+  logo: {
+    maxHeight: mm(18),
+    maxWidth: mm(60),
+    objectFit: "contain",
+    objectPosition: "left top",
+    marginBottom: mm(3),
+  },
   senderName: { fontWeight: 700, fontSize: 11, marginBottom: 1 },
   senderLine: { fontSize: 9, color: ACCENT },
-  recipient: { position: "absolute", top: mm(32), left: mm(100), width: mm(74), fontSize: 10.5 },
+  recipient: {
+    position: "absolute",
+    top: mm(32),
+    left: mm(100),
+    width: mm(74),
+    fontSize: 10.5,
+  },
   recipientName: { fontWeight: 700 },
   recipientEmpty: { color: "#9a948e" },
   placeDate: { textAlign: "right", color: ACCENT, marginBottom: mm(6) },
@@ -59,7 +78,12 @@ const s = StyleSheet.create({
     fontSize: 8.5,
     color: INK,
   },
-  tr: { flexDirection: "row", borderBottomWidth: 0.5, borderBottomColor: LINE, paddingVertical: 4 },
+  tr: {
+    flexDirection: "row",
+    borderBottomWidth: 0.5,
+    borderBottomColor: LINE,
+    paddingVertical: 4,
+  },
   cPos: { width: 28 },
   cLabel: { flex: 1, paddingRight: 8 },
   cQty: { width: 50, textAlign: "right" },
@@ -69,7 +93,11 @@ const s = StyleSheet.create({
   unpriced: { fontStyle: "italic", color: MUTED },
 
   totals: { marginTop: mm(5), alignSelf: "flex-end", width: mm(86) },
-  totalRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 2 },
+  totalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 2,
+  },
   totalSub: { fontSize: 8, color: MUTED },
   grand: {
     flexDirection: "row",
@@ -81,14 +109,24 @@ const s = StyleSheet.create({
     fontWeight: 700,
     fontSize: 12,
   },
-  provisionalNote: { marginTop: 4, textAlign: "right", fontStyle: "italic", color: MUTED },
+  provisionalNote: {
+    marginTop: 4,
+    textAlign: "right",
+    fontStyle: "italic",
+    color: MUTED,
+  },
 
   conditions: { marginTop: mm(9) },
   h2: { fontWeight: 700, fontSize: 10, marginBottom: 3 },
   condLine: { marginBottom: 2 },
   footerNote: { marginTop: 4, fontSize: 8.5, color: ACCENT },
 
-  accept: { marginTop: mm(9), borderWidth: 0.75, borderColor: INK, padding: mm(4) },
+  accept: {
+    marginTop: mm(9),
+    borderWidth: 0.75,
+    borderColor: INK,
+    padding: mm(4),
+  },
   acceptTitle: { fontWeight: 700, fontSize: 11, marginBottom: 2 },
   acceptText: { fontSize: 9, color: ACCENT },
   signRow: { flexDirection: "row", marginTop: mm(8), gap: mm(8) },
@@ -118,7 +156,13 @@ const s = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  watermarkText: { fontSize: 84, fontWeight: 700, color: "#eceae7", transform: "rotate(-45deg)", letterSpacing: 6 },
+  watermarkText: {
+    fontSize: 84,
+    fontWeight: 700,
+    color: "#eceae7",
+    transform: "rotate(-45deg)",
+    letterSpacing: 6,
+  },
 });
 
 export interface PdfLogo {
@@ -149,11 +193,20 @@ export function QuoteDocument({
   const isDraft = quote.status !== "valide";
   const clientLines = addressLines(quote.clientAddress);
   const hasClient = quote.clientName.trim() !== "" || clientLines.length > 0;
-  const contact = [company.phone, company.email, company.website].filter((v) => v.trim() !== "");
-  const footerLeft = [company.name, company.vatNumber].filter((v) => v.trim() !== "").join(" · ");
+  const contact = [company.phone, company.email, company.website].filter(
+    (v) => v.trim() !== "",
+  );
+  const footerLeft = [company.name, company.vatNumber]
+    .filter((v) => v.trim() !== "")
+    .join(" · ");
 
   return (
-    <Document title={`Devis ${quote.number}`} author={company.name} creator={company.name} language="fr-CH">
+    <Document
+      title={`Devis ${quote.number}`}
+      author={company.name}
+      creator={company.name}
+      language="fr-CH"
+    >
       <Page size="A4" style={s.page}>
         {isDraft && (
           <View style={s.watermark} fixed>
@@ -163,16 +216,32 @@ export function QuoteDocument({
 
         <View style={s.footer} fixed>
           <Text>{footerLeft}</Text>
-          <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber}/${totalPages}`} />
+          <Text
+            render={({ pageNumber, totalPages }) =>
+              `Page ${pageNumber}/${totalPages}`
+            }
+          />
         </View>
 
         <View style={s.header}>
           <View style={s.sender}>
-            {/* eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf, pas un <img> HTML */}
-            {logo && <Image src={{ data: logo.bytes, format: logo.mimeType === "image/png" ? "png" : "jpg" }} style={s.logo} />}
+            {logo && (
+              // eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf, pas un <img> HTML
+              <Image
+                src={{
+                  data: logo.bytes,
+                  format: logo.mimeType === "image/png" ? "png" : "jpg",
+                }}
+                style={s.logo}
+              />
+            )}
             <Text style={s.senderName}>{company.name}</Text>
-            {company.street.trim() !== "" && <Text style={s.senderLine}>{company.street}</Text>}
-            {company.postalCity.trim() !== "" && <Text style={s.senderLine}>{company.postalCity}</Text>}
+            {company.street.trim() !== "" && (
+              <Text style={s.senderLine}>{company.street}</Text>
+            )}
+            {company.postalCity.trim() !== "" && (
+              <Text style={s.senderLine}>{company.postalCity}</Text>
+            )}
             {contact.map((c) => (
               <Text key={c} style={s.senderLine}>
                 {c}
@@ -182,7 +251,9 @@ export function QuoteDocument({
           <View style={s.recipient}>
             {hasClient ? (
               <>
-                {quote.clientName.trim() !== "" && <Text style={s.recipientName}>{quote.clientName.trim()}</Text>}
+                {quote.clientName.trim() !== "" && (
+                  <Text style={s.recipientName}>{quote.clientName.trim()}</Text>
+                )}
                 {clientLines.map((l, i) => (
                   <Text key={i}>{l}</Text>
                 ))}
@@ -193,9 +264,15 @@ export function QuoteDocument({
           </View>
         </View>
 
-        <Text style={s.placeDate}>{placeAndDate(company, quote.createdAt)}</Text>
+        <Text style={s.placeDate}>
+          {placeAndDate(company, quote.createdAt)}
+        </Text>
         <Text style={s.title}>Devis n° {quote.number}</Text>
-        {isDraft && <Text style={s.provisional}>Document provisoire, non contractuel</Text>}
+        {isDraft && (
+          <Text style={s.provisional}>
+            Document provisoire, non contractuel
+          </Text>
+        )}
         {quote.title.trim() !== "" && (
           <Text style={s.subject}>
             <Text style={s.subjectLabel}>Objet : </Text>
@@ -206,7 +283,9 @@ export function QuoteDocument({
         <View style={s.table}>
           <View style={s.th} fixed>
             <Text style={s.cPos}>Pos.</Text>
-            <View style={s.cLabel}><Text>Désignation</Text></View>
+            <View style={s.cLabel}>
+              <Text>Désignation</Text>
+            </View>
             <Text style={s.cQty}>Quantité</Text>
             <Text style={s.cUnit}>Unité</Text>
             <Text style={s.cPrice}>Prix unit. HT</Text>
@@ -215,7 +294,9 @@ export function QuoteDocument({
           {rows.map((row) => (
             <View key={row.position} style={s.tr} wrap={false}>
               <Text style={s.cPos}>{row.position}</Text>
-              <View style={s.cLabel}><Text>{row.label}</Text></View>
+              <View style={s.cLabel}>
+                <Text>{row.label}</Text>
+              </View>
               <Text style={s.cQty}>{row.quantity}</Text>
               <Text style={s.cUnit}>{row.unit}</Text>
               {row.unitPrice === null ? (
@@ -233,7 +314,9 @@ export function QuoteDocument({
           ))}
           {rows.length === 0 && (
             <View style={s.tr}>
-              <View style={s.cLabel}><Text style={s.unpriced}>Aucune ligne.</Text></View>
+              <View style={s.cLabel}>
+                <Text style={s.unpriced}>Aucune ligne.</Text>
+              </View>
             </View>
           )}
         </View>
@@ -249,46 +332,61 @@ export function QuoteDocument({
               <View key={r.label} style={s.totalRow}>
                 <View>
                   <Text>{r.label}</Text>
-                  {r.sublabel && <Text style={s.totalSub}>N° {r.sublabel}</Text>}
+                  {r.sublabel && (
+                    <Text style={s.totalSub}>N° {r.sublabel}</Text>
+                  )}
                 </View>
                 <Text>{r.value}</Text>
               </View>
             ),
           )}
-          {totals.hasUnpricedLines && <Text style={s.provisionalNote}>{provisionalText(unpriced)}</Text>}
+          {totals.hasUnpricedLines && (
+            <Text style={s.provisionalNote}>{provisionalText(unpriced)}</Text>
+          )}
         </View>
 
         <View style={s.conditions} wrap={false}>
           <Text style={s.h2}>Conditions</Text>
-          <Text style={s.condLine}>{validityText(quote.createdAt, company.validityDays)}.</Text>
+          <Text style={s.condLine}>
+            {validityText(quote.createdAt, company.validityDays)}.
+          </Text>
           {company.paymentTerms.trim() !== "" && (
-            <Text style={s.condLine}>Conditions de paiement : {company.paymentTerms.trim()}.</Text>
+            <Text style={s.condLine}>
+              Conditions de paiement : {company.paymentTerms.trim()}.
+            </Text>
           )}
-          {company.iban.trim() !== "" && <Text style={s.condLine}>IBAN : {company.iban.trim()}</Text>}
-          {company.footerNote.trim() !== "" && <Text style={s.footerNote}>{company.footerNote.trim()}</Text>}
+          {company.iban.trim() !== "" && (
+            <Text style={s.condLine}>IBAN : {company.iban.trim()}</Text>
+          )}
+          {company.footerNote.trim() !== "" && (
+            <Text style={s.footerNote}>{company.footerNote.trim()}</Text>
+          )}
         </View>
 
-        <View style={s.accept} wrap={false}>
-          <Text style={s.acceptTitle}>Bon pour accord</Text>
-          <Text style={s.acceptText}>
-            Le client accepte le présent devis n° {quote.number} et en autorise l’exécution.
-          </Text>
-          <View style={s.signRow}>
-            <View style={s.signCell}>
-              <View style={s.signLine} />
-              <Text style={s.signLabel}>Lieu</Text>
-            </View>
-            <View style={s.signCell}>
-              <View style={s.signLine} />
-              <Text style={s.signLabel}>Date</Text>
-            </View>
-            <View style={[s.signCell, { flexGrow: 1.6 }]}>
-              <View style={s.signLine} />
-              <Text style={s.signLabel}>Signature du client</Text>
+        {/* Pas de « Bon pour accord » sur un document provisoire. */}
+        {!isDraft && (
+          <View style={s.accept} wrap={false}>
+            <Text style={s.acceptTitle}>Bon pour accord</Text>
+            <Text style={s.acceptText}>
+              Le client accepte le présent devis n° {quote.number} et en
+              autorise l’exécution.
+            </Text>
+            <View style={s.signRow}>
+              <View style={s.signCell}>
+                <View style={s.signLine} />
+                <Text style={s.signLabel}>Lieu</Text>
+              </View>
+              <View style={s.signCell}>
+                <View style={s.signLine} />
+                <Text style={s.signLabel}>Date</Text>
+              </View>
+              <View style={[s.signCell, { flexGrow: 1.6 }]}>
+                <View style={s.signLine} />
+                <Text style={s.signLabel}>Signature du client</Text>
+              </View>
             </View>
           </View>
-        </View>
-
+        )}
       </Page>
     </Document>
   );
