@@ -27,6 +27,10 @@ export default function Home() {
           Grille de prix
           <span aria-hidden="true">›</span>
         </Link>
+        <Link href="/entreprise" className={linkClass}>
+          Entreprise
+          <span aria-hidden="true">›</span>
+        </Link>
       </nav>
     </main>
   );
