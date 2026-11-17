@@ -10,6 +10,8 @@ import type { MediaKind } from "@/domain/types";
  * MEDIA_DIR/<quoteId>/<uuid>.<ext>. Le type est vérifié sur le contenu du
  * fichier (signature), pas seulement sur ce qu'annonce le navigateur.
  */
+// Les commentaires turbopackIgnore évitent que le build trace tout le projet
+// à cause de chemins calculés à l'exécution.
 export function mediaDir(): string {
   return process.env.MEDIA_DIR ?? "data/media";
 }
@@ -83,9 +85,9 @@ export async function storeMediaFile(quoteId: number, kind: MediaKind, file: Blo
   const format = detectFormat(kind, bytes);
   const id = randomUUID();
   const fileName = `${id}.${format.ext}`;
-  const dir = path.join(mediaDir(), String(quoteId));
+  const dir = path.join(/* turbopackIgnore: true */ mediaDir(), String(quoteId));
   await fs.mkdir(dir, { recursive: true });
-  await fs.writeFile(path.join(dir, fileName), bytes, { flag: "wx" });
+  await fs.writeFile(path.join(/* turbopackIgnore: true */ dir, fileName), bytes, { flag: "wx" });
   return { id, kind, fileName, mimeType: format.mimeType, sizeBytes: bytes.length };
 }
 
@@ -94,10 +96,10 @@ export function mediaFilePath(quoteId: number, fileName: string): string {
   if (!/^[0-9a-f-]{36}\.[a-z0-9]{2,4}$/.test(fileName)) {
     throw new QuoteError("Nom de fichier invalide.");
   }
-  return path.resolve(mediaDir(), String(quoteId), fileName);
+  return path.resolve(/* turbopackIgnore: true */ mediaDir(), String(quoteId), fileName);
 }
 
 /** Supprime le dossier d'un devis (nettoyage après un échec de création). */
 export async function removeQuoteMediaDir(quoteId: number): Promise<void> {
-  await fs.rm(path.join(mediaDir(), String(quoteId)), { recursive: true, force: true });
+  await fs.rm(path.join(/* turbopackIgnore: true */ mediaDir(), String(quoteId)), { recursive: true, force: true });
 }
