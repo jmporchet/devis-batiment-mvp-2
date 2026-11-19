@@ -24,11 +24,11 @@ export default function Home() {
           <span aria-hidden="true">›</span>
         </Link>
         <Link href="/grille" className={linkClass}>
-          Grille de prix
+          Ma grille de prix
           <span aria-hidden="true">›</span>
         </Link>
         <Link href="/entreprise" className={linkClass}>
-          Entreprise
+          Mon entreprise
           <span aria-hidden="true">›</span>
         </Link>
       </nav>
