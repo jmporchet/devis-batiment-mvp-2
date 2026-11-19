@@ -1,6 +1,6 @@
 # Devis chantier
 
-MVP d'un générateur de devis pour une PME suisse du bâtiment. Le chef de chantier prend jusqu'à 3 photos et dicte environ 30 secondes de notes. L'application propose un devis structuré à partir de la grille de prix de l'entreprise, en CHF avec TVA à 8,1 %, puis produit un PDF à l'en-tête de l'entreprise.
+MVP d'un générateur de devis pour une PME suisse du bâtiment. Le chef de chantier prend de 1 à 5 photos et dicte environ 30 secondes de notes. L'application propose un devis structuré à partir de la grille de prix de l'entreprise, en CHF avec TVA à 8,1 %, puis produit un PDF à l'en-tête de l'entreprise.
 
 ## Lancer en local
 

@@ -58,13 +58,14 @@ describe("createQuote", () => {
 });
 
 describe("médias", () => {
-  it("accepte 3 photos et 1 note vocale, refuse au-delà", () => {
+  it("accepte 5 photos et 1 note vocale, refuse au-delà", () => {
     const q = createQuote(db);
-    for (const n of [1, 2, 3]) addQuoteMedia(db, q.id, media("photo", n));
-    expect(() => addQuoteMedia(db, q.id, media("photo", 4))).toThrow(QuoteError);
-    addQuoteMedia(db, q.id, media("audio", 5));
-    expect(() => addQuoteMedia(db, q.id, media("audio", 6))).toThrow(/Une seule note vocale/);
-    expect(getQuote(db, q.id)!.media.map((m) => m.kind)).toEqual(["photo", "photo", "photo", "audio"]);
+    for (const n of [1, 2, 3, 4, 5]) addQuoteMedia(db, q.id, media("photo", n));
+    expect(() => addQuoteMedia(db, q.id, media("photo", 6))).toThrow(QuoteError);
+    expect(() => addQuoteMedia(db, q.id, media("photo", 6))).toThrow(/5 photos au maximum/);
+    addQuoteMedia(db, q.id, media("audio", 7));
+    expect(() => addQuoteMedia(db, q.id, media("audio", 8))).toThrow(/Une seule note vocale/);
+    expect(getQuote(db, q.id)!.media.map((m) => m.kind)).toEqual([...Array(5).fill("photo"), "audio"]);
   });
 
   it("ne renvoie un média que pour son devis", () => {

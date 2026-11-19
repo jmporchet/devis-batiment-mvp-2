@@ -98,7 +98,7 @@ export const MEDIA_KINDS = ["photo", "audio"] as const;
 export type MediaKind = (typeof MEDIA_KINDS)[number];
 
 /** Nombre maximal de photos par devis. */
-export const MAX_PHOTOS = 3;
+export const MAX_PHOTOS = 5;
 /** Durée maximale d'une note vocale, en secondes (cible : environ 30 s). */
 export const MAX_AUDIO_SECONDS = 60;
 

@@ -81,7 +81,7 @@ describe("createQuoteFromCapture", () => {
 
   it("refuse une capture vide ou trop de photos", async () => {
     await expect(createQuoteFromCapture(db, { photos: [] })).rejects.toThrow(/au moins une photo/);
-    await expect(createQuoteFromCapture(db, { photos: [blob(JPEG), blob(JPEG), blob(JPEG), blob(JPEG)] })).rejects.toThrow(/3 photos/);
+    await expect(createQuoteFromCapture(db, { photos: Array.from({ length: 6 }, () => blob(JPEG)) })).rejects.toThrow(/5 photos/);
     expect(listQuotes(db)).toHaveLength(0);
   });
 

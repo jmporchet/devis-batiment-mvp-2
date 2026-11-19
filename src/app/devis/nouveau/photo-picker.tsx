@@ -21,12 +21,14 @@ function Thumbnail({ file, alt }: { file: File; alt: string }) {
     return () => URL.revokeObjectURL(url);
   }, [file]);
   // eslint-disable-next-line @next/next/no-img-element
-  return <img ref={ref} alt={alt} className="h-20 w-20 shrink-0 rounded-lg bg-stone-200 object-cover" />;
+  return <img ref={ref} alt={alt} className="aspect-square w-full rounded-lg bg-stone-200 object-cover" />;
 }
 
 /**
- * Trois emplacements photo. Chaque emplacement libre propose l'appareil photo
- * et la galerie ; les fichiers restent en mémoire jusqu'à l'envoi.
+ * Un seul bloc photos : vignettes des photos choisies, puis deux boutons.
+ * « Prendre une photo » ouvre l'appareil (une photo à la fois) ; « Choisir des
+ * photos » ouvre la galerie avec sélection multiple. De 1 à MAX_PHOTOS photos,
+ * gardées en mémoire jusqu'à l'envoi.
  */
 export function PhotoPicker({
   photos,
@@ -50,10 +52,13 @@ export function PhotoPicker({
     if (files.length > 0) onPick(files);
   }
 
-  const full = photos.length >= MAX_PHOTOS;
+  const remaining = MAX_PHOTOS - photos.length;
+  const full = remaining <= 0;
+  // Pendant la préparation, pas de nouvelle sélection : l'ordre est conservé.
+  const pickDisabled = disabled || processing || full;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       <input
         ref={cameraRef}
         type="file"
@@ -72,60 +77,48 @@ export function PhotoPicker({
         onChange={handle}
         data-testid="photo-gallery"
       />
-      <ul className="flex flex-col gap-2">
-        {Array.from({ length: MAX_PHOTOS }, (_, index) => {
-          const photo = photos[index];
-          return (
-            <li key={index} className="rounded-xl border border-stone-200 bg-white p-3">
-              {photo ? (
-                <div className="flex items-center gap-3">
-                  <Thumbnail file={photo.file} alt={`Photo ${index + 1}`} />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">Photo {index + 1}</p>
-                    <p className="text-xs text-stone-500">{Math.max(1, Math.round(photo.file.size / 1024))} Ko</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => onRemove(photo.key)}
-                    disabled={disabled}
-                    className={secondaryButton}
-                    aria-label={`Retirer la photo ${index + 1}`}
-                  >
-                    Retirer
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  <p className="text-sm font-medium text-stone-600">Photo {index + 1}</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      className={secondaryButton}
-                      disabled={disabled || processing || full}
-                      onClick={() => cameraRef.current?.click()}
-                    >
-                      Prendre une photo
-                    </button>
-                    <button
-                      type="button"
-                      className={secondaryButton}
-                      disabled={disabled || processing || full}
-                      onClick={() => galleryRef.current?.click()}
-                    >
-                      Choisir dans la galerie
-                    </button>
-                  </div>
-                </div>
-              )}
+
+      {photos.length > 0 ? (
+        <ul className="grid grid-cols-3 gap-2" aria-label="Photos choisies">
+          {photos.map((photo, index) => (
+            <li key={photo.key} className="relative">
+              <Thumbnail file={photo.file} alt={`Photo ${index + 1}`} />
+              <button
+                type="button"
+                onClick={() => onRemove(photo.key)}
+                disabled={disabled}
+                aria-label={`Retirer la photo ${index + 1}`}
+                className="absolute top-1 right-1 inline-flex size-11 items-center justify-center rounded-full bg-stone-900/75 text-xl leading-none text-white active:bg-stone-900 disabled:opacity-50"
+              >
+                <span aria-hidden="true">×</span>
+              </button>
             </li>
-          );
-        })}
-      </ul>
-      {processing ? (
-        <p role="status" className="text-sm text-stone-600">
-          Préparation des photos…
+          ))}
+        </ul>
+      ) : (
+        <p className="rounded-xl border border-dashed border-stone-300 bg-white p-4 text-center text-sm text-stone-500">
+          Aucune photo pour l&apos;instant.
         </p>
-      ) : null}
+      )}
+
+      <div className="grid grid-cols-2 gap-2">
+        <button type="button" className={secondaryButton} disabled={pickDisabled} onClick={() => cameraRef.current?.click()}>
+          Prendre une photo
+        </button>
+        <button type="button" className={secondaryButton} disabled={pickDisabled} onClick={() => galleryRef.current?.click()}>
+          Choisir des photos
+        </button>
+      </div>
+
+      <p className="text-sm text-stone-600" role="status">
+        {processing
+          ? "Préparation des photos…"
+          : full
+            ? `Maximum atteint : ${MAX_PHOTOS} photos.`
+            : `De 1 à ${MAX_PHOTOS} photos. Dans la galerie, vous pouvez en choisir plusieurs à la fois${
+                photos.length > 0 ? ` (encore ${remaining})` : ""
+              }.`}
+      </p>
     </div>
   );
 }
