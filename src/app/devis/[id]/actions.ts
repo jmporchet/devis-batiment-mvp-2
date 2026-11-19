@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { QuoteError, replaceQuoteLines, setQuoteStatus, updateQuoteInfo } from "@/db/quotes";
 import { AiError } from "@/server/ai/openrouter";
 import { generateQuoteDraft } from "@/server/ai/generate-draft";
+import { deleteDraftWithMedia } from "@/server/delete-quote";
 import type { Quote, QuoteInfo, QuoteLine, QuoteStatus } from "@/domain/types";
 import type { ActionResult } from "./action-result";
 
@@ -96,4 +98,21 @@ export async function generateDraftAction(id: number): Promise<ActionResult> {
   } catch (error) {
     return failure(error);
   }
+}
+
+/**
+ * Supprime un brouillon et ses fichiers, puis renvoie vers la liste. Refusé
+ * pour un devis validé. Ne renvoie un résultat qu'en cas d'erreur.
+ */
+export async function deleteDraftAction(id: number): Promise<ActionResult> {
+  if (!isId(id)) return failure(new QuoteError("Devis introuvable."));
+  let number: string;
+  try {
+    number = await deleteDraftWithMedia(getDb(), id);
+  } catch (error) {
+    return failure(error);
+  }
+  revalidatePath("/devis");
+  // Hors du try : redirect() fonctionne en levant une exception.
+  redirect(`/devis?supprime=${encodeURIComponent(number)}`);
 }

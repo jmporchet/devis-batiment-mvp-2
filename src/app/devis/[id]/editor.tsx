@@ -15,7 +15,7 @@ import {
   type Unit,
 } from "@/domain/types";
 import type { ActionResult } from "./action-result";
-import { generateDraftAction, saveInfoAction, saveLinesAction, setStatusAction } from "./actions";
+import { deleteDraftAction, generateDraftAction, saveInfoAction, saveLinesAction, setStatusAction } from "./actions";
 import { GridPicker } from "./grid-picker";
 import { LineRow, lineFieldId } from "./line-row";
 import {
@@ -45,6 +45,9 @@ export interface EditorQuote {
   status: QuoteStatus;
   info: QuoteInfo;
   lines: QuoteLine[];
+  /** Pour le message de confirmation de suppression. */
+  photoCount: number;
+  hasAudio: boolean;
 }
 
 interface Message {
@@ -257,6 +260,29 @@ export function Editor({
     } catch (error) {
       console.error(error);
       setMessage({ kind: "error", text: SAVE_ERROR, at: contentId });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** Suppression définitive d'un brouillon (la liste s'ouvre ensuite). */
+  async function deleteDraft() {
+    if (busy || readOnly) return;
+    const attached = [
+      quote.photoCount === 1 ? "sa photo" : quote.photoCount > 1 ? `ses ${quote.photoCount} photos` : "",
+      quote.hasAudio ? "sa note vocale" : "",
+    ].filter(Boolean);
+    const what =
+      `Supprimer définitivement le devis ${quote.number}` +
+      (attached.length > 0 ? ` avec ${attached.join(" et ")}` : "") +
+      " ? Cette action est irréversible.";
+    if (!window.confirm(what)) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      // En cas de succès, l'action redirige vers /devis et ne renvoie rien.
+      const result = await deleteDraftAction(quote.id);
+      if (result && !result.ok) fail(result);
     } finally {
       setBusy(false);
     }
@@ -626,6 +652,25 @@ export function Editor({
           </p>
         )}
       </section>
+
+      {!readOnly && (
+        <section aria-labelledby="suppression-titre" className="flex flex-col gap-2 border-t border-stone-200 pt-5">
+          <h2 id="suppression-titre" className="text-base font-semibold">
+            Supprimer ce brouillon
+          </h2>
+          <p className="text-sm text-stone-600">
+            Le devis, ses lignes, ses photos et sa note vocale seront effacés définitivement.
+          </p>
+          <button
+            type="button"
+            onClick={() => void deleteDraft()}
+            disabled={busy}
+            className={`${buttonClass} border border-red-700 bg-white text-red-800 active:bg-red-50`}
+          >
+            Supprimer le brouillon
+          </button>
+        </section>
+      )}
 
       <div
         data-testid="barre"

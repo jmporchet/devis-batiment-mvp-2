@@ -290,6 +290,20 @@ export function deleteQuote(db: Db, id: number): void {
   db.delete(quotes).where(eq(quotes.id, id)).run();
 }
 
+/**
+ * Supprime un brouillon (lignes et médias en base). Un devis validé ne peut
+ * pas être supprimé : il a pu être envoyé à un client. Renvoie son numéro.
+ * Les fichiers sur disque sont à supprimer par l'appelant.
+ */
+export function deleteDraftQuote(db: Db, id: number): string {
+  const quote = requireQuote(db, id);
+  if (quote.status === "valide") {
+    throw new QuoteError("Un devis validé ne peut pas être supprimé. Repassez-le d'abord en brouillon.");
+  }
+  deleteQuote(db, id);
+  return quote.number;
+}
+
 /* ---------- Utilitaires ---------- */
 
 function requireQuote(db: Db, id: number): Quote {

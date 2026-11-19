@@ -43,6 +43,8 @@ async function QuoteScreen({
         number: quote.number,
         createdAtLabel: formatDateCh(quote.createdAt),
         status: quote.status,
+        photoCount: quote.media.filter((m) => m.kind === "photo").length,
+        hasAudio: quote.media.some((m) => m.kind === "audio"),
         info: {
           title: quote.title,
           clientName: quote.clientName,
