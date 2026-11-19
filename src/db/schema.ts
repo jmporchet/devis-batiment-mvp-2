@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { blob, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import type { Category, MediaKind, QuoteStatus, Unit } from "@/domain/types";
 
 /** Grille de prix de l'entreprise (une seule entreprise pour le MVP). */
@@ -58,4 +58,26 @@ export const quoteMedia = sqliteTable("quote_media", {
   mimeType: text("mime_type").notNull(),
   sizeBytes: integer("size_bytes").notNull(),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+/**
+ * Coordonnées de l'entreprise (une seule ligne, id = 1). Logo stocké en base
+ * (petit fichier, servi par /entreprise/logo).
+ */
+export const company = sqliteTable("company", {
+  id: integer("id").primaryKey(),
+  name: text("name").notNull(),
+  street: text("street").notNull().default(""),
+  postalCity: text("postal_city").notNull().default(""),
+  phone: text("phone").notNull().default(""),
+  email: text("email").notNull().default(""),
+  website: text("website").notNull().default(""),
+  vatNumber: text("vat_number").notNull().default(""),
+  iban: text("iban").notNull().default(""),
+  validityDays: integer("validity_days").notNull().default(30),
+  paymentTerms: text("payment_terms").notNull().default(""),
+  footerNote: text("footer_note").notNull().default(""),
+  logo: blob("logo", { mode: "buffer" }),
+  logoMimeType: text("logo_mime_type"),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
 });

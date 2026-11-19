@@ -15,6 +15,13 @@
       "when": 1794907426540,
       "tag": "0001_devis",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794912007930,
+      "tag": "0002_entreprise",
+      "breakpoints": true
     }
   ]
 }

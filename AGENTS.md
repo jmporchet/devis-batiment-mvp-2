@@ -24,3 +24,5 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Server Actions : limite de corps à 40 Mo (`next.config.ts`) ; réduire les photos côté navigateur avant l'envoi.
 - Brouillon IA : `src/server/ai/` (`draft.ts` pur et testé : prompt, schéma JSON, lecture de la réponse ; `generate-draft.ts` : orchestration ; `openrouter.ts` : client). Le modèle ne voit pas les prix et ne les fixe jamais. Routage privé obligatoire (`PRIVATE_ROUTING`). Clé dans `OPENROUTER_API_KEY` (`.env.local`), jamais dans le code.
 - Une Server Action lancée depuis un `useEffect` doit passer par `useTransition` : sinon les mises à jour d'état préalables restent bloquées jusqu'à la fin de l'action.
+- Entreprise (en-tête du PDF) : `src/db/company.ts` (`getCompany`, `updateCompany`, `getCompanyLogo`, `setCompanyLogo`). Une seule ligne, créée avec `DEMO_COMPANY` (fictif) au premier accès. Logo PNG ou JPEG ≤ 1 Mo, stocké en base, servi par `/entreprise/logo`.
+- Route Handler sans paramètre dynamique qui lit la base : appeler `await connection()` en premier, sinon Next la pré-rend au build et fige la réponse.
