@@ -26,3 +26,4 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Une Server Action lancée depuis un `useEffect` doit passer par `useTransition` : sinon les mises à jour d'état préalables restent bloquées jusqu'à la fin de l'action.
 - Entreprise (en-tête du PDF) : `src/db/company.ts` (`getCompany`, `updateCompany`, `getCompanyLogo`, `setCompanyLogo`). Une seule ligne, créée avec `DEMO_COMPANY` (fictif) au premier accès. Logo PNG ou JPEG ≤ 1 Mo, stocké en base, servi par `/entreprise/logo`.
 - Route Handler sans paramètre dynamique qui lit la base : appeler `await connection()` en premier, sinon Next la pré-rend au build et fige la réponse.
+- Suppression : seuls les brouillons (`deleteDraftQuote`, refus pour un devis validé). Côté serveur, `deleteDraftWithMedia` efface aussi les fichiers. `deleteQuote` reste réservé au nettoyage interne.

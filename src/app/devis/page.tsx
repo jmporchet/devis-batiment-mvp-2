@@ -18,7 +18,7 @@ const STATUS_CLASS: Record<QuoteStatus, string> = {
   valide: "bg-emerald-100 text-emerald-900",
 };
 
-export default function DevisPage() {
+export default function DevisPage({ searchParams }: PageProps<"/devis">) {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-5 px-4 py-6">
       <header>
@@ -32,10 +32,24 @@ export default function DevisPage() {
           </Link>
         </div>
       </header>
+      <Suspense fallback={null}>
+        <DeletedNotice searchParams={searchParams} />
+      </Suspense>
       <Suspense fallback={<p className="text-stone-500">Chargement des devis…</p>}>
         <QuoteList />
       </Suspense>
     </main>
+  );
+}
+
+/** Confirmation après la suppression d'un brouillon (?supprime=2026-003). */
+async function DeletedNotice({ searchParams }: Pick<PageProps<"/devis">, "searchParams">) {
+  const { supprime } = await searchParams;
+  if (typeof supprime !== "string" || !/^\d{4}-\d{3,}$/.test(supprime)) return null;
+  return (
+    <p role="status" className="rounded-lg bg-stone-200 p-3 text-sm text-stone-900">
+      Devis {supprime} supprimé.
+    </p>
   );
 }
 
