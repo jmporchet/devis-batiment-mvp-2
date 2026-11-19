@@ -159,7 +159,7 @@ export function createQuote(db: Db, info: Partial<QuoteInfo> = {}, now = new Dat
   return getQuote(db, id)!;
 }
 
-/** Enregistre un média déjà écrit sur disque. Max 3 photos et 1 note vocale. */
+/** Enregistre un média déjà écrit sur disque. Max MAX_PHOTOS photos et 1 note vocale. */
 export function addQuoteMedia(
   db: Db,
   quoteId: number,

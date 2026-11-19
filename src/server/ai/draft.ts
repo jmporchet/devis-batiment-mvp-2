@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { UNIT_LABELS, UNITS, type PriceItem, type QuoteLine, type Unit } from "@/domain/types";
+import { MAX_PHOTOS, UNIT_LABELS, UNITS, type PriceItem, type QuoteLine, type Unit } from "@/domain/types";
 
 /**
  * Brouillon de devis par l'IA : construction de la demande et lecture de la
@@ -35,7 +35,7 @@ export interface QuoteDraft {
 export const MAX_DRAFT_LINES = 40;
 
 const SYSTEM_PROMPT = `Tu es métreur dans une PME suisse romande du bâtiment (rénovation intérieure).
-Un chef de chantier t'envoie une note vocale dictée sur place et jusqu'à 3 photos. Tu prépares un brouillon de devis qu'il relira et corrigera.
+Un chef de chantier t'envoie une note vocale dictée sur place et jusqu'à ${MAX_PHOTOS} photos. Tu prépares un brouillon de devis qu'il relira et corrigera.
 
 Règles :
 1. Transcris fidèlement la note vocale en français (champ "transcription"). Sans note vocale, laisse une chaîne vide.

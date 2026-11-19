@@ -19,7 +19,7 @@ Tous les montants sont des entiers en centimes. Les taux sont en points de base 
 | 1 | Socle | Projet, SQLite + migrations, Vitest, CI, types du domaine |
 | 2 | Moteur de calcul | HT, TVA, TTC, arrondi 5 ct, tests |
 | 3 | Grille de prix | Postes de départ (Suisse romande), écran d'édition |
-| 4 | Capture mobile | 3 photos + enregistrement d'environ 30 s, liste des devis |
+| 4 | Capture mobile | 1 à 5 photos (sélection multiple) + enregistrement d'environ 30 s, liste des devis |
 | 5 | Brouillon IA | Transcription, structuration, postes « à chiffrer » |
 | 6 | Relecture | Édition des lignes (depuis la grille ou hors grille), recalcul en direct, validation |
 | 7 | PDF | En-tête entreprise, n° IDE/TVA, validité, conditions |

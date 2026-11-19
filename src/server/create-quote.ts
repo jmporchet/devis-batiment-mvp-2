@@ -5,7 +5,7 @@ import { MAX_PHOTOS, type Quote } from "@/domain/types";
 import { removeQuoteMediaDir, storeMediaFile } from "./media-store";
 
 /**
- * Crée un devis brouillon à partir de la capture terrain : jusqu'à 3 photos
+ * Crée un devis brouillon à partir de la capture terrain : jusqu'à MAX_PHOTOS (5) photos
  * et une note vocale facultative. Tout ou rien : en cas d'erreur, le devis
  * et ses fichiers sont supprimés.
  */
