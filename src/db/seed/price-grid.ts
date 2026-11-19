@@ -4,7 +4,7 @@
  * Ces postes et ces prix sont des ordres de grandeur plausibles pour la
  * Suisse romande en 2026 (prix HT, en centimes de CHF). Ils servent à
  * démarrer : l'entreprise doit les relire et les ajuster à ses propres
- * tarifs depuis l'écran « Grille de prix » avant tout usage réel.
+ * tarifs depuis l'écran « Ma grille de prix » avant tout usage réel.
  *
  * Codes : préfixe de catégorie (DEM, MAC, CAR, SAN, PEI, ELE, MEN, DIV) et
  * trois chiffres, de 10 en 10 pour pouvoir insérer des postes intermédiaires.

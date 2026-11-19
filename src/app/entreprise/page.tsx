@@ -9,7 +9,7 @@ import { FIELDS, type CompanyFormState } from "./action-state";
 import { CompanyForm } from "./company-form";
 import { LogoSection } from "./logo-section";
 
-export const metadata: Metadata = { title: "Entreprise · Devis chantier" };
+export const metadata: Metadata = { title: "Mon entreprise · Devis chantier" };
 
 export default function EntreprisePage() {
   return (
@@ -18,7 +18,7 @@ export default function EntreprisePage() {
         <Link href="/" className="inline-flex min-h-11 items-center text-sm text-stone-600 underline">
           Accueil
         </Link>
-        <h1 className="text-2xl font-semibold">Entreprise</h1>
+        <h1 className="text-2xl font-semibold">Mon entreprise</h1>
         <p className="mt-1 text-sm text-stone-600">
           Ces coordonnées apparaissent en en-tête et en pied des devis PDF.
         </p>
