@@ -8,7 +8,7 @@ import { CATEGORIES, CATEGORY_LABELS, type Category } from "@/domain/types";
 import { AddItemForm } from "./add-item-form";
 import { PriceItemRow } from "./price-item-row";
 
-export const metadata: Metadata = { title: "Grille de prix · Devis chantier" };
+export const metadata: Metadata = { title: "Ma grille de prix · Devis chantier" };
 
 export default function GrillePage() {
   return (
@@ -17,7 +17,7 @@ export default function GrillePage() {
         <Link href="/" className="inline-flex min-h-11 items-center text-sm text-stone-600 underline">
           Accueil
         </Link>
-        <h1 className="text-2xl font-semibold">Grille de prix</h1>
+        <h1 className="text-2xl font-semibold">Ma grille de prix</h1>
         <p className="mt-1 text-sm text-stone-600">
           Prix unitaires HT en CHF. Seuls les postes actifs sont proposés pour les devis.
         </p>
