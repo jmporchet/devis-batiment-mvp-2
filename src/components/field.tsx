@@ -89,7 +89,8 @@ export function Field({
   );
 }
 
-function ErrorIcon() {
+/** Icône « Erreur » à placer devant chaque message d'erreur (texte alternatif lu). */
+export function ErrorIcon() {
   return (
     <span role="img" aria-label="Erreur">
       ⚠

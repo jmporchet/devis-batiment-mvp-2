@@ -1,4 +1,5 @@
 import type { Ref } from "react";
+import { ErrorIcon } from "@/components/field";
 
 /**
  * Région d'erreur toujours rendue : le conteneur `role="alert"` existe avant
@@ -17,9 +18,7 @@ export function ErrorRegion({ message, ref }: { message: string; ref?: Ref<HTMLD
     >
       {message ? (
         <>
-          <span role="img" aria-label="Erreur">
-            ⚠
-          </span>
+          <ErrorIcon />
           <p>{message}</p>
         </>
       ) : null}

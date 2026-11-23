@@ -74,6 +74,7 @@ export function useConfirm(): [ReactNode, (options: ConfirmOptions) => Promise<b
       <form method="dialog" className="mt-5 flex flex-wrap justify-end gap-2">
         <button
           ref={cancelRef}
+          type="submit"
           value="cancel"
           className="min-h-12 rounded-lg border border-stone-400 bg-white px-4 font-medium active:bg-stone-100"
         >
@@ -81,6 +82,7 @@ export function useConfirm(): [ReactNode, (options: ConfirmOptions) => Promise<b
         </button>
         <button
           ref={confirmRef}
+          type="submit"
           value="confirm"
           className={`min-h-12 rounded-lg px-4 font-medium text-white ${
             options?.destructive ? "bg-red-700 active:bg-red-800" : "bg-stone-900 active:bg-stone-700"
