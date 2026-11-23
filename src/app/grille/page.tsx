@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { getDb } from "@/db/client";
@@ -14,11 +14,14 @@ export default function GrillePage() {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-8">
       <header>
-        <Link href="/" className="inline-flex min-h-11 items-center text-sm text-stone-600 underline">
-          Accueil
-        </Link>
+        <Breadcrumbs
+          items={[
+            { href: "/", label: "Accueil" },
+            { href: "/grille", label: "Ma grille de prix" },
+          ]}
+        />
         <h1 className="text-2xl font-semibold">Ma grille de prix</h1>
-        <p className="mt-1 text-sm text-stone-600">
+        <p className="mt-1 text-stone-700">
           Prix unitaires HT en CHF. Seuls les postes actifs sont proposés pour les devis.
         </p>
       </header>
@@ -39,7 +42,7 @@ async function Grid() {
 
   return (
     <>
-      <AddItemForm key={Object.values(suggestedCodes).join()} suggestedCodes={suggestedCodes} />
+      <AddItemForm suggestedCodes={suggestedCodes} />
       {CATEGORIES.map((category) => {
         const group = items.filter((i) => i.category === category);
         if (group.length === 0) return null;

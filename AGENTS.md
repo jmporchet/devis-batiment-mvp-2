@@ -27,3 +27,19 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Entreprise (en-tête du PDF) : `src/db/company.ts` (`getCompany`, `updateCompany`, `getCompanyLogo`, `setCompanyLogo`). Une seule ligne, créée avec `DEMO_COMPANY` (fictif) au premier accès. Logo PNG ou JPEG ≤ 1 Mo, stocké en base, servi par `/entreprise/logo`.
 - Route Handler sans paramètre dynamique qui lit la base : appeler `await connection()` en premier, sinon Next la pré-rend au build et fige la réponse.
 - Suppression : seuls les brouillons (`deleteDraftQuote`, refus pour un devis validé). Côté serveur, `deleteDraftWithMedia` efface aussi les fichiers. `deleteQuote` reste réservé au nettoyage interne.
+
+## Front : conventions Modern Web Guidance
+
+Guides de référence : `npx -y modern-web-guidance@latest retrieve "<id>"` (forms, validate-input-after-interaction, required-field-feedback, accessible-error-announcement, form-factor-adaptation, respect-os-text-scale, search-hidden-content, dialog, card, breadcrumbs).
+
+- **Champs** : toujours via `Field` (`src/components/field.tsx`, render-prop). Libellé au-dessus, aide au-dessus du contrôle (le clavier mobile ne la masque pas), `name`, `required`, `type`, `pattern`, `minLength`… natifs. L'erreur client s'affiche seulement après interaction (`:user-invalid`) ; l'erreur serveur passe par `serverError` (reliée par `aria-describedby`, `aria-invalid`). Chaque message commence par l'icône « Erreur » et dit comment corriger. `UserInvalidAria` (monté dans le layout) synchronise l'ARIA : ne pas le dupliquer.
+- **Validation personnalisée** (hors contraintes natives, ex. quantité d'une ligne) : poser `aria-invalid="true"` sur le contrôle fautif et relier le message par `aria-describedby`, retirer les deux quand c'est corrigé. Ne pas s'appuyer sur la couleur seule.
+- **Saisie conservée après une erreur serveur** : renvoyer les valeurs soumises dans l'état et les remettre en `defaultValue` ; remonter le `<form>` avec `key={state.at}` (React ne réapplique pas un `defaultValue` modifié sur un `<select>`). Focus sur le premier champ en erreur après la réponse.
+- **Formulaires** : un `<form>` par action, nommé par `aria-labelledby` (titre) quand la page en a plusieurs ; `type="button"` sur tout bouton qui n'envoie pas le formulaire ; bouton d'envoi au libellé actionnable ; `<fieldset>`+`<legend>` pour grouper ; filtre de recherche dans `<search>`.
+- **Messages d'état** (enregistré, erreur générale, analyse en cours) : une région `role="status"` toujours rendue dont le texte change (une région qui apparaît n'est pas annoncée de façon fiable).
+- **Confirmations** : `useConfirm()` (`src/components/confirm-dialog.tsx`, `<dialog>` modal natif). Jamais `window.confirm`.
+- **Navigation** : `Breadcrumbs` (`src/components/breadcrumbs.tsx`) en tête de chaque page autre que l'accueil ; la page courante en dernier.
+- **Contenu repliable** : `<details>`/`<summary>` natifs.
+- **Listes de cartes** : `<article>` avec un titre ; un seul lien peut envelopper la carte seulement si elle ne contient aucun autre élément interactif.
+- **Mobile** : cibles ≥ 44 px sur écran tactile (gérées par `globals.css`), champs ≥ 16 px, ne jamais fixer la taille de police racine, ne jamais supprimer le contour de focus, pas de `overflow-x: hidden` sur `html`/`body` (corriger l'élément trop large).
+- **CSS partagé** : `src/app/globals.css` et `src/components/*` appartiennent à l'orchestrateur ; un agent qui en a besoin le signale au lieu de les modifier.
