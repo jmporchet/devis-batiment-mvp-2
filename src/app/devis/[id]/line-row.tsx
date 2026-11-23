@@ -6,7 +6,7 @@ import { lineTotalCents } from "@/domain/pricing";
 import { formatQuantity, parseQuantity } from "@/domain/quantity";
 import { UNITS, UNIT_LABELS, type Unit } from "@/domain/types";
 import { draftToLine, type LineDraft, type LineErrors } from "./line-drafts";
-import { ErrorIcon } from "./error-icon";
+import { ErrorIcon } from "@/components/field";
 import { inputClass, secondaryButtonClass } from "./ui";
 
 export interface LineRowProps {

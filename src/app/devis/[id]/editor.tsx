@@ -18,7 +18,7 @@ import {
 } from "@/domain/types";
 import type { ActionResult } from "./action-result";
 import { deleteDraftAction, generateDraftAction, saveInfoAction, saveLinesAction, setStatusAction } from "./actions";
-import { ErrorIcon } from "./error-icon";
+import { ErrorIcon } from "@/components/field";
 import { GridPicker } from "./grid-picker";
 import { LineRow, lineFieldId } from "./line-row";
 import {
@@ -174,8 +174,8 @@ export function Editor({
   });
 
   // La barre collante ne doit jamais masquer le champ qui prend le focus.
-  // 1. scroll-padding-bottom égal à la hauteur réelle de la barre (elle grandit avec
-  //    la taille de texte du système et avec un message long).
+  // 1. scroll-padding-bottom suit la hauteur réelle de la barre (elle grandit avec
+  //    la taille de texte du système et avec un message long) via une variable CSS.
   // 2. Le navigateur ne fait pas défiler un champ déjà entièrement dans la fenêtre,
   //    même s'il passe sous la barre, ou sous le clavier virtuel : on le remonte.
   useEffect(() => {
@@ -183,7 +183,8 @@ export function Editor({
     if (!bar) return;
     const root = document.documentElement;
     const update = () => {
-      root.style.scrollPaddingBottom = `${Math.ceil(bar.getBoundingClientRect().height) + 16}px`;
+      // Hauteur réelle de la barre, lue par scroll-padding-bottom dans globals.css.
+      root.style.setProperty("--sticky-bar-block-size", `${Math.ceil(bar.getBoundingClientRect().height)}px`);
     };
     update();
     const observer = new ResizeObserver(update);
@@ -208,7 +209,7 @@ export function Editor({
       observer.disconnect();
       document.removeEventListener("focusin", onFocusIn);
       window.visualViewport?.removeEventListener("resize", onViewportResize);
-      root.style.scrollPaddingBottom = "";
+      root.style.removeProperty("--sticky-bar-block-size");
     };
   }, []);
 

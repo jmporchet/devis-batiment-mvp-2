@@ -81,9 +81,10 @@
   }
 }
 
-/* La barre collante du bas ne doit jamais masquer le champ qui prend le focus. */
+/* Une barre collante en bas d'écran (relecture) publie sa hauteur dans
+   --sticky-bar-block-size : le champ qui prend le focus n'est jamais masqué. */
 html {
-  scroll-padding-bottom: 10rem;
+  scroll-padding-bottom: calc(var(--sticky-bar-block-size, 0px) + 1rem);
 }
 
 /* Fil d'Ariane (composant Breadcrumbs). */
