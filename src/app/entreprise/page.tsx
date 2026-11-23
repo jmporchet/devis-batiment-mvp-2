@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { getDb } from "@/db/client";
@@ -15,9 +15,12 @@ export default function EntreprisePage() {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-8">
       <header>
-        <Link href="/" className="inline-flex min-h-11 items-center text-sm text-stone-600 underline">
-          Accueil
-        </Link>
+        <Breadcrumbs
+          items={[
+            { href: "/", label: "Accueil" },
+            { href: "/entreprise", label: "Mon entreprise" },
+          ]}
+        />
         <h1 className="text-2xl font-semibold">Mon entreprise</h1>
         <p className="mt-1 text-sm text-stone-600">
           Ces coordonnées apparaissent en en-tête et en pied des devis PDF.
@@ -38,6 +41,7 @@ async function Content() {
     message: "",
     fieldErrors: {},
     values: Object.fromEntries(FIELDS.map((f) => [f, String(company[f])])) as CompanyFormState["values"],
+    at: 0,
   };
 
   return (
