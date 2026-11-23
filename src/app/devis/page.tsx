@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { getDb } from "@/db/client";
 import { listQuotes } from "@/db/quotes";
 import { formatChf } from "@/domain/money";
@@ -22,19 +23,24 @@ export default function DevisPage({ searchParams }: PageProps<"/devis">) {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-5 px-4 py-6">
       <header>
-        <Link href="/" className="inline-flex min-h-11 items-center text-sm text-stone-600 underline">
-          Accueil
-        </Link>
+        <Breadcrumbs
+          items={[
+            { href: "/", label: "Accueil" },
+            { href: "/devis", label: "Devis" },
+          ]}
+        />
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-2xl font-semibold">Devis</h1>
           <Link href="/devis/nouveau" className={newQuoteClass}>
             Nouveau devis
           </Link>
         </div>
+        <div role="status" className="not-empty:mt-3">
+          <Suspense fallback={null}>
+            <DeletedNotice searchParams={searchParams} />
+          </Suspense>
+        </div>
       </header>
-      <Suspense fallback={null}>
-        <DeletedNotice searchParams={searchParams} />
-      </Suspense>
       <Suspense fallback={<p className="text-stone-500">Chargement des devis…</p>}>
         <QuoteList />
       </Suspense>
@@ -46,11 +52,7 @@ export default function DevisPage({ searchParams }: PageProps<"/devis">) {
 async function DeletedNotice({ searchParams }: Pick<PageProps<"/devis">, "searchParams">) {
   const { supprime } = await searchParams;
   if (typeof supprime !== "string" || !/^\d{4}-\d{3,}$/.test(supprime)) return null;
-  return (
-    <p role="status" className="rounded-lg bg-stone-200 p-3 text-sm text-stone-900">
-      Devis {supprime} supprimé.
-    </p>
-  );
+  return <p className="rounded-lg bg-stone-200 p-3 text-sm text-stone-900">Devis {supprime} supprimé.</p>;
 }
 
 async function QuoteList() {
@@ -79,21 +81,29 @@ async function QuoteList() {
   );
 }
 
+/**
+ * Carte d'un devis : <article> avec un titre. Le texte de la carte est long,
+ * donc seul le titre est un lien ; son ::after étire la zone cliquable sur
+ * toute la carte (lien étiré). Aucun autre élément interactif dans la carte.
+ */
 function QuoteCard({ quote }: { quote: QuoteSummary }) {
   const { totals } = quote;
   return (
-    <Link
-      href={`/devis/${quote.id}`}
-      className="flex min-h-11 flex-col gap-2 rounded-xl border border-stone-200 bg-white p-4 active:bg-stone-100"
-    >
+    <article className="relative flex flex-col gap-2 rounded-xl border border-stone-200 bg-white p-4 has-[a:active]:bg-stone-100 has-[a:focus-visible]:outline-3 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-stone-900">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm text-stone-500">
+          <p className="text-sm text-stone-600">
             N° {quote.number} · {formatDateCh(quote.createdAt)}
           </p>
-          <p className={`break-words text-base font-semibold ${quote.title ? "" : "text-stone-500"}`}>
-            {quote.title || "Sans objet"}
-          </p>
+          <h2 className={`break-words text-base font-semibold ${quote.title ? "" : "text-stone-600"}`}>
+            <Link
+              href={`/devis/${quote.id}`}
+              className="inline-flex min-h-(--target-size) items-center after:absolute after:inset-0 focus-visible:outline-none"
+            >
+              {quote.title || "Sans objet"}
+              <span className="visually-hidden"> (devis n° {quote.number})</span>
+            </Link>
+          </h2>
           {quote.clientName ? <p className="break-words text-sm text-stone-600">{quote.clientName}</p> : null}
         </div>
         <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_CLASS[quote.status]}`}>
@@ -103,10 +113,10 @@ function QuoteCard({ quote }: { quote: QuoteSummary }) {
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <p className="text-base font-semibold tabular-nums">
           {quote.lineCount === 0 ? (
-            <span className="font-normal text-stone-500">Pas encore chiffré</span>
+            <span className="font-normal text-stone-600">Pas encore chiffré</span>
           ) : (
             <>
-              {formatChf(totals.totalCents)} <span className="text-xs font-normal text-stone-500">TTC</span>
+              {formatChf(totals.totalCents)} <span className="text-xs font-normal text-stone-600">TTC</span>
               {totals.hasUnpricedLines ? (
                 <span className="ml-2 text-xs font-medium text-amber-800">incomplet</span>
               ) : null}
@@ -118,6 +128,6 @@ function QuoteCard({ quote }: { quote: QuoteSummary }) {
           {quote.photoCount > 1 ? "photos" : "photo"} · {quote.hasAudio ? "note vocale" : "sans note vocale"}
         </p>
       </div>
-    </Link>
+    </article>
   );
 }

@@ -1,121 +1,100 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useId, useRef } from "react";
 import { formatAmount, formatChf } from "@/domain/money";
-import { UNITS, UNIT_LABELS, type PriceItem } from "@/domain/types";
-import { INITIAL_STATE, type ActionState } from "./action-state";
+import { UNIT_LABELS, type PriceItem } from "@/domain/types";
+import { INITIAL_STATE } from "./action-state";
 import { setPriceItemActiveAction, updatePriceItemAction } from "./actions";
+import { PriceItemFields } from "./price-fields";
 
-const inputClass =
-  "min-h-11 w-full rounded-lg border border-stone-300 bg-white px-3 text-base text-stone-900 focus:border-stone-600 focus:outline-none focus:ring-2 focus:ring-stone-300";
 const buttonClass =
-  "inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg px-4 text-sm font-medium";
+  "inline-flex min-h-12 items-center justify-center rounded-lg px-4 text-sm font-medium";
 
+/**
+ * Un poste de la grille. La modification s'ouvre dans un <details> natif et
+ * les formulaires appellent directement les Server Actions (via bind) : tout
+ * fonctionne aussi sans JavaScript.
+ */
 export function PriceItemRow({ item }: { item: PriceItem }) {
-  const [editing, setEditing] = useState(false);
+  const labelId = useId();
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, pending] = useActionState(
-    async (prev: ActionState, formData: FormData) => {
-      const result = await updatePriceItemAction(item.id, prev, formData);
-      if (result.ok) setEditing(false);
-      return result;
-    },
+    updatePriceItemAction.bind(null, item.id),
     INITIAL_STATE,
   );
 
+  useEffect(() => {
+    if (state === INITIAL_STATE) return;
+    if (state.ok) {
+      if (detailsRef.current) detailsRef.current.open = false;
+    } else {
+      formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+    }
+  }, [state]);
+
+  const v = state.values;
+
   return (
-    <li className={`py-3 ${item.active ? "" : "opacity-60"}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-medium tracking-wide text-stone-500">
+    <li className={`py-3 ${item.active ? "" : "text-stone-500"}`}>
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+        <div className="min-w-0 flex-1 basis-48">
+          <p className="text-xs font-medium tracking-wide text-stone-600">
             {item.id}
             {!item.active && (
-              <span className="ml-2 rounded bg-stone-200 px-1.5 py-0.5 text-stone-700">
-                Inactif
-              </span>
+              <span className="ml-2 rounded bg-stone-200 px-1.5 py-0.5 text-stone-800">Inactif</span>
             )}
           </p>
-          <p className="text-base leading-snug">{item.label}</p>
+          <p id={labelId} className="leading-snug">
+            {item.label}
+          </p>
         </div>
-        <p className="shrink-0 text-right text-base font-semibold tabular-nums">
+        <p className="shrink-0 text-right font-semibold tabular-nums">
           {formatChf(item.unitPriceCents)}
-          <span className="block text-xs font-normal text-stone-500">
-            / {UNIT_LABELS[item.unit]}
-          </span>
+          <span className="block text-xs font-normal text-stone-600">/ {UNIT_LABELS[item.unit]}</span>
         </p>
       </div>
 
-      {editing ? (
-        <form action={formAction} className="mt-3 flex flex-col gap-3 rounded-lg bg-stone-100 p-3">
-          <label className="flex flex-col gap-1 text-sm font-medium">
-            Libellé
-            <input
-              name="label"
-              defaultValue={item.label}
-              required
-              maxLength={200}
-              className={inputClass}
+      <div className="mt-2 flex flex-wrap items-start gap-2">
+        <details ref={detailsRef} className="group min-w-0 open:basis-full">
+          <summary className={`${buttonClass} w-fit cursor-pointer border border-stone-500 bg-white`}>
+            <span className="group-open:hidden">Modifier</span>
+            <span className="hidden group-open:inline">Fermer</span>
+            <span className="visually-hidden"> {item.label}</span>
+          </summary>
+          <form
+            key={state.at}
+            ref={formRef}
+            action={formAction}
+            aria-labelledby={labelId}
+            className="mt-3 flex flex-col gap-4 rounded-lg bg-stone-100 p-3"
+          >
+            <PriceItemFields
+              label={v?.label ?? item.label}
+              unit={v?.unit ?? item.unit}
+              price={v?.price ?? formatAmount(item.unitPriceCents)}
+              fieldErrors={state.fieldErrors}
             />
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            <label className="flex flex-col gap-1 text-sm font-medium">
-              Unité
-              <select name="unit" defaultValue={item.unit} className={inputClass}>
-                {UNITS.map((u) => (
-                  <option key={u} value={u}>
-                    {UNIT_LABELS[u]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-sm font-medium">
-              Prix HT (CHF)
-              <input
-                name="price"
-                defaultValue={formatAmount(item.unitPriceCents)}
-                inputMode="decimal"
-                required
-                className={inputClass}
-              />
-            </label>
-          </div>
-          {state.message && !state.ok && (
-            <p role="alert" className="text-sm text-red-700">
-              {state.message}
-            </p>
-          )}
-          <div className="flex gap-2">
             <button
               type="submit"
               disabled={pending}
-              className={`${buttonClass} flex-1 bg-stone-900 text-white disabled:opacity-60`}
+              className={`${buttonClass} bg-stone-900 text-white disabled:opacity-60`}
             >
-              {pending ? "Enregistrement…" : "Enregistrer"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setEditing(false)}
-              className={`${buttonClass} border border-stone-300 bg-white`}
-            >
-              Annuler
-            </button>
-          </div>
-        </form>
-      ) : (
-        <div className="mt-2 flex gap-2">
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className={`${buttonClass} border border-stone-300 bg-white`}
-          >
-            Modifier
-          </button>
-          <form action={setPriceItemActiveAction.bind(null, item.id, !item.active)}>
-            <button type="submit" className={`${buttonClass} text-stone-700 underline`}>
-              {item.active ? "Désactiver" : "Réactiver"}
+              {pending ? "Enregistrement…" : "Enregistrer les modifications"}
             </button>
           </form>
-        </div>
-      )}
+        </details>
+        <form action={setPriceItemActiveAction.bind(null, item.id, !item.active)}>
+          <button type="submit" className={`${buttonClass} text-stone-800 underline`}>
+            {item.active ? "Désactiver" : "Réactiver"}
+            <span className="visually-hidden"> {item.label}</span>
+          </button>
+        </form>
+      </div>
+
+      <p role="status" className={`text-sm ${state.ok ? "text-green-800" : "text-red-700"}`}>
+        {state.message}
+      </p>
     </li>
   );
 }

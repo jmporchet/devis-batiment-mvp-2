@@ -1,7 +1,13 @@
 import Link from "next/link";
 
 const linkClass =
-  "flex min-h-11 items-center justify-between rounded-xl border border-stone-200 bg-white px-4 text-base font-medium";
+  "flex min-h-12 items-center justify-between rounded-xl border border-stone-200 bg-white px-4 text-base font-medium";
+
+const MENU = [
+  { href: "/devis", label: "Devis" },
+  { href: "/grille", label: "Ma grille de prix" },
+  { href: "/entreprise", label: "Mon entreprise" },
+];
 
 export default function Home() {
   return (
@@ -18,19 +24,17 @@ export default function Home() {
       >
         Nouveau devis
       </Link>
-      <nav className="flex flex-col gap-3">
-        <Link href="/devis" className={linkClass}>
-          Devis
-          <span aria-hidden="true">›</span>
-        </Link>
-        <Link href="/grille" className={linkClass}>
-          Ma grille de prix
-          <span aria-hidden="true">›</span>
-        </Link>
-        <Link href="/entreprise" className={linkClass}>
-          Mon entreprise
-          <span aria-hidden="true">›</span>
-        </Link>
+      <nav aria-label="Menu principal">
+        <ul className="flex flex-col gap-3">
+          {MENU.map((item) => (
+            <li key={item.href}>
+              <Link href={item.href} className={linkClass}>
+                {item.label}
+                <span aria-hidden="true">›</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </nav>
     </main>
   );

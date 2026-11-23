@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { formatAmount, formatChf, parseChf } from "@/domain/money";
 import { lineTotalCents } from "@/domain/pricing";
 import { formatQuantity, parseQuantity } from "@/domain/quantity";
 import { UNITS, UNIT_LABELS, type Unit } from "@/domain/types";
 import { draftToLine, type LineDraft, type LineErrors } from "./line-drafts";
+import { ErrorIcon } from "@/components/field";
 import { inputClass, secondaryButtonClass } from "./ui";
 
 export interface LineRowProps {
@@ -15,6 +17,10 @@ export interface LineRowProps {
   /** Erreur renvoyée par le serveur pour cette ligne. */
   serverError?: string;
   readOnly: boolean;
+  /** Affiche d'emblée les erreurs de saisie (après une tentative d'enregistrement). */
+  showErrors?: boolean;
+  /** Une saisie invalide vient d'être quittée : à annoncer dans la région de statut. */
+  onInvalidBlur: (message: string) => void;
   onChange: (patch: Partial<LineDraft>) => void;
   onMove: (direction: -1 | 1) => void;
   onRemove: () => void;
@@ -33,10 +39,15 @@ export function LineRow({
   errors = {},
   serverError,
   readOnly,
+  showErrors = false,
+  onInvalidBlur,
   onChange,
   onMove,
   onRemove,
 }: LineRowProps) {
+  // Une erreur de saisie n'apparaît qu'après avoir quitté le champ (ou après
+  // une tentative d'enregistrement), et disparaît dès que la saisie est corrigée.
+  const [touched, setTouched] = useState<Partial<Record<keyof LineErrors, boolean>>>({});
   const line = draftToLine(draft);
   let total: number | null = null;
   try {
@@ -47,9 +58,20 @@ export function LineRow({
   const unpriced = draft.priceText.trim() === "";
   const n = index + 1;
   const id = (field: string) => lineFieldId(draft.key, field);
+  const shown = (field: keyof LineErrors) => (touched[field] || showErrors ? errors[field] : undefined);
+  /** Toute frappe efface l'erreur affichée : elle revient en quittant le champ, si la saisie reste invalide. */
+  const edit = (field: keyof LineErrors, patch: Partial<LineDraft>) => {
+    setTouched((current) => (current[field] ? { ...current, [field]: false } : current));
+    onChange(patch);
+  };
+  const blur = (field: keyof LineErrors, name: string) => {
+    setTouched((current) => (current[field] ? current : { ...current, [field]: true }));
+    const message = errors[field];
+    if (message) onInvalidBlur(`${name}, ligne ${n} : ${message}`);
+  };
 
   const badges = (
-    <p className="flex flex-wrap items-center gap-1.5 text-xs text-stone-500">
+    <p className="flex flex-wrap items-center gap-1.5 text-xs text-stone-600">
       <span className="font-medium">Ligne {n}</span>
       {draft.priceItemId && <span className="tracking-wide">{draft.priceItemId}</span>}
       {draft.source === "ai" && (
@@ -79,8 +101,9 @@ export function LineRow({
     );
   }
 
-  const describedBy = (field: "label" | "quantity" | "price", error?: string) =>
-    error ? id(`${field}-error`) : undefined;
+  const labelError = shown("label");
+  const quantityError = shown("quantity");
+  const priceError = shown("price");
 
   return (
     <li className="flex flex-col gap-3 py-4">
@@ -88,21 +111,24 @@ export function LineRow({
 
       <div className="flex flex-col gap-1">
         <label htmlFor={id("label")} className="text-sm font-medium">
-          Libellé
+          Libellé<span className="visually-hidden">, ligne {n}</span>
         </label>
         <textarea
           id={id("label")}
+          name={`lignes[${index}].libelle`}
           rows={2}
           value={draft.label}
           maxLength={300}
-          onChange={(e) => onChange({ label: e.target.value })}
-          aria-invalid={errors.label ? true : undefined}
-          aria-describedby={describedBy("label", errors.label)}
+          onChange={(e) => edit("label", { label: e.target.value })}
+          onBlur={() => blur("label", "Libellé")}
+          aria-invalid={labelError ? "true" : "false"}
+          aria-describedby={labelError ? id("label-error") : undefined}
           className={`${inputClass} resize-none py-2 leading-snug`}
         />
-        {errors.label && (
-          <p id={id("label-error")} className="text-sm text-red-700">
-            {errors.label}
+        {labelError && (
+          <p id={id("label-error")} className="flex items-start gap-1 text-sm text-red-700">
+            <ErrorIcon />
+            {labelError}
           </p>
         )}
       </div>
@@ -110,39 +136,48 @@ export function LineRow({
       <div className="grid grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] gap-3">
         <div className="flex min-w-0 flex-col gap-1">
           <label htmlFor={id("quantity")} className="text-sm font-medium">
-            Quantité
+            Quantité<span className="visually-hidden">, ligne {n}</span>
           </label>
           <div className="flex items-center gap-2">
             <input
               id={id("quantity")}
+              name={`lignes[${index}].quantite`}
               inputMode="decimal"
               autoComplete="off"
+              enterKeyHint="next"
               value={draft.quantityText}
-              onChange={(e) => onChange({ quantityText: e.target.value })}
+              onChange={(e) => edit("quantity", { quantityText: e.target.value })}
               onFocus={(e) => e.currentTarget.select()}
               onBlur={() => {
                 const parsed = parseQuantity(draft.quantityText);
                 if (parsed !== null && formatQuantity(parsed) !== draft.quantityText) {
                   onChange({ quantityText: formatQuantity(parsed) });
                 }
+                blur("quantity", "Quantité");
               }}
-              aria-invalid={errors.quantity ? true : undefined}
-              aria-describedby={describedBy("quantity", errors.quantity)}
+              aria-invalid={quantityError ? "true" : "false"}
+              aria-describedby={quantityError ? id("quantity-error") : undefined}
               className={`${inputClass} flex-1 text-right tabular-nums`}
             />
             {draft.priceItemId === null ? (
-              <select
-                aria-label={`Unité de la ligne ${n}`}
-                value={draft.unit}
-                onChange={(e) => onChange({ unit: e.target.value as Unit })}
-                className={`${inputClass.replace("w-full", "")} w-[6rem] shrink-0 px-1 text-sm`}
-              >
-                {UNITS.map((u) => (
-                  <option key={u} value={u}>
-                    {UNIT_LABELS[u]}
-                  </option>
-                ))}
-              </select>
+              <>
+                <label htmlFor={id("unit")} className="visually-hidden">
+                  Unité, ligne {n}
+                </label>
+                <select
+                  id={id("unit")}
+                  name={`lignes[${index}].unite`}
+                  value={draft.unit}
+                  onChange={(e) => onChange({ unit: e.target.value as Unit })}
+                  className={`${inputClass.replace("w-full", "")} w-[6rem] shrink-0 px-1 text-sm`}
+                >
+                  {UNITS.map((u) => (
+                    <option key={u} value={u}>
+                      {UNIT_LABELS[u]}
+                    </option>
+                  ))}
+                </select>
+              </>
             ) : (
               <span className="shrink-0 text-base text-stone-700">{UNIT_LABELS[draft.unit]}</span>
             )}
@@ -151,40 +186,51 @@ export function LineRow({
 
         <div className="flex min-w-0 flex-col gap-1">
           <label htmlFor={id("price")} className="text-sm font-medium">
-            Prix unitaire HT
+            Prix unitaire HT<span className="visually-hidden">, ligne {n}</span>
           </label>
           <input
             id={id("price")}
+            name={`lignes[${index}].prix`}
             inputMode="decimal"
             autoComplete="off"
+            enterKeyHint="done"
             placeholder="à chiffrer"
             value={draft.priceText}
-            onChange={(e) => onChange({ priceText: e.target.value })}
+            onChange={(e) => edit("price", { priceText: e.target.value })}
             onFocus={(e) => e.currentTarget.select()}
             onBlur={() => {
               const cents = parseChf(draft.priceText);
               if (cents !== null && formatAmount(cents) !== draft.priceText) {
                 onChange({ priceText: formatAmount(cents) });
               }
+              blur("price", "Prix unitaire HT");
             }}
-            aria-invalid={errors.price ? true : undefined}
-            aria-describedby={describedBy("price", errors.price)}
+            aria-invalid={priceError ? "true" : "false"}
+            aria-describedby={priceError ? id("price-error") : undefined}
             className={`${inputClass} text-right tabular-nums`}
           />
         </div>
       </div>
-      {errors.quantity && (
-        <p id={id("quantity-error")} className="text-sm text-red-700">
-          {errors.quantity}
+      {quantityError && (
+        <p id={id("quantity-error")} className="flex items-start gap-1 text-sm text-red-700">
+          <ErrorIcon />
+          {quantityError}
         </p>
       )}
-      {errors.price && (
-        <p id={id("price-error")} className="text-sm text-red-700">
-          {errors.price}
+      {priceError && (
+        <p id={id("price-error")} className="flex items-start gap-1 text-sm text-red-700">
+          <ErrorIcon />
+          {priceError}
         </p>
       )}
       {serverError && (
-        <p role="alert" className="text-sm text-red-700">
+        // Reçoit le focus après un refus du serveur : la ligne fautive est annoncée.
+        <p
+          id={id("server-error")}
+          tabIndex={-1}
+          className="flex items-start gap-1 rounded text-sm text-red-700"
+        >
+          <ErrorIcon />
           {serverError}
         </p>
       )}
@@ -213,6 +259,7 @@ export function LineRow({
           </button>
           <button
             type="button"
+            id={id("remove")}
             onClick={onRemove}
             aria-label={`Supprimer la ligne ${n}`}
             className={`${secondaryButtonClass} text-red-800`}
@@ -221,7 +268,7 @@ export function LineRow({
           </button>
         </div>
         <p className="ml-auto text-right">
-          <span className="block text-xs text-stone-500">Total HT</span>
+          <span className="block text-xs text-stone-600">Total HT</span>
           <span className="text-base font-semibold tabular-nums" data-testid={`line-total-${index}`}>
             {total === null ? "—" : formatChf(total)}
           </span>
