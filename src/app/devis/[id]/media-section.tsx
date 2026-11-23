@@ -13,32 +13,45 @@ export function MediaSection({ quoteId, media }: { quoteId: number; media: Quote
         Photos et note vocale
       </h2>
       {photos.length > 0 && (
-        <ul className="flex flex-wrap gap-2">
-          {photos.map((photo, i) => (
-            <li key={photo.id}>
-              <a
-                href={url(photo)}
-                target="_blank"
-                rel="noopener"
-                aria-label={`Ouvrir la photo ${i + 1} en grand`}
-                className="block overflow-hidden rounded-lg border border-stone-200 bg-stone-100"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element -- photos servies par la route média, pas d'optimisation voulue */}
-                <img
-                  src={url(photo)}
-                  alt={`Photo ${i + 1} du chantier`}
-                  loading="lazy"
-                  className="h-24 w-24 object-cover"
-                />
-              </a>
-            </li>
-          ))}
-        </ul>
+        <div className="flex flex-col gap-2">
+          <h3 id="photos-titre" className="text-sm font-medium">
+            Photos du chantier ({photos.length})
+          </h3>
+          <ul aria-labelledby="photos-titre" className="flex flex-wrap gap-2">
+            {photos.map((photo, i) => (
+              <li key={photo.id}>
+                {/* Le texte alternatif nomme le lien : il dit quelle photo et ce que le lien fait. */}
+                <a
+                  href={url(photo)}
+                  target="_blank"
+                  rel="noopener"
+                  className="block overflow-hidden rounded-lg border border-stone-300 bg-stone-100"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- photos servies par la route média, pas d'optimisation voulue */}
+                  <img
+                    src={url(photo)}
+                    alt={`Photo ${i + 1} sur ${photos.length} du chantier, ouvrir en grand dans un nouvel onglet`}
+                    width={96}
+                    height={96}
+                    loading="lazy"
+                    decoding="async"
+                    className="block aspect-square w-24 object-cover"
+                  />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       {audio && (
-        <audio controls preload="metadata" src={url(audio)} className="w-full">
-          Votre navigateur ne sait pas lire cette note vocale.
-        </audio>
+        <div className="flex flex-col gap-1">
+          <p id="audio-titre" className="text-sm font-medium">
+            Note vocale du chantier
+          </p>
+          <audio controls preload="metadata" src={url(audio)} aria-labelledby="audio-titre" className="w-full">
+            Votre navigateur ne sait pas lire cette note vocale.
+          </audio>
+        </div>
       )}
     </section>
   );
