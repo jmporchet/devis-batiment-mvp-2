@@ -93,23 +93,30 @@ html {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.25rem;
-    margin: 0;
+    /* Le rembourrage des liens fait l'espacement ; le premier reste aligné. */
+    margin: 0 0 0 -0.5rem;
     padding: 0;
     list-style: none;
     font-size: 0.875rem;
+  }
+  .breadcrumbs li {
+    display: flex;
+    align-items: center;
   }
   .breadcrumbs li + li::before {
     /* Séparateur décoratif : texte alternatif vide, hors de l'arbre d'accessibilité. */
     content: "›";
     content: "›" / "";
-    margin-inline-end: 0.25rem;
     color: var(--color-stone-500);
   }
   .breadcrumbs a {
     display: inline-flex;
     align-items: center;
+    /* Zone tactile : hauteur de cible, et largeur par rembourrage symétrique
+       (une largeur minimale décentrait le texte des liens courts). */
     min-block-size: var(--target-size);
+    min-inline-size: 0;
+    padding-inline: 0.5rem;
     color: var(--color-stone-700);
     text-decoration: underline;
   }
